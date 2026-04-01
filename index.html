@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>The Wild Cards — We.hear.you.</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:#c4a882;--surface:rgba(210,185,155,0.55);--card-bg:rgba(222,200,168,0.72);
+      --text:#2a1f0e;--text-mid:#4a3520;--text-muted:#7a6040;
+      --border:rgba(100,70,30,0.18);--accent:#6b4c2a;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+    /* SKYLINE */
+    .skyline-bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+    .skyline-bg svg{position:absolute;bottom:0;width:100%;min-width:900px;opacity:0.35}
+    .skyline-bg::after{content:'';position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");opacity:0.5}
+
+    /* NAV */
+    nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:1.4rem 2.5rem}
+    .nav-brand{display:flex;flex-direction:column}
+    .nav-title{font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:700;color:var(--text);line-height:1}
+    .nav-sub{font-family:'Lora',serif;font-size:0.85rem;color:var(--text-muted);font-style:italic;margin-top:0.15rem}
+    .nav-links{display:flex;gap:0.5rem;align-items:center;background:rgba(210,185,148,0.55);backdrop-filter:blur(8px);border-radius:999px;padding:0.5rem 1rem;border:1px solid var(--border)}
+    .nav-links a{font-family:'Playfair Display',serif;font-size:1rem;color:var(--text-muted);text-decoration:none;padding:0.3rem 0.8rem;border-radius:999px;transition:all 0.2s;cursor:pointer}
+    .nav-links a:hover,.nav-links a.active{color:var(--text);background:rgba(100,70,30,0.12)}
+
+    /* PAGES */
+    .page{display:none;position:relative;z-index:1;min-height:100vh;padding:7rem 2.5rem 4rem}
+    .page.active{display:flex;flex-direction:column}
+
+    /* HOME */
+    #page-home{justify-content:center;align-items:flex-start;max-width:960px;margin:0 auto;width:100%}
+    .home-question{font-family:'Playfair Display',serif;font-size:clamp(1.6rem,4vw,2.5rem);color:var(--text);margin-bottom:1.5rem;margin-top:2rem;font-weight:400;animation:fadeUp 0.7s ease both}
+    .home-input-wrap{width:100%;background:var(--card-bg);backdrop-filter:blur(12px);border-radius:1.5rem;padding:1.8rem 2rem 5rem;border:1px solid var(--border);animation:fadeUp 0.7s 0.1s ease both;position:relative;min-height:260px}
+    .input-label{font-family:'Lora',serif;font-size:1rem;color:var(--text-muted);margin-bottom:0.8rem;display:block}
+    .home-input-wrap textarea{width:100%;background:transparent;border:none;outline:none;font-family:'Lora',serif;font-size:1.05rem;color:var(--text);resize:none;line-height:1.7;min-height:100px}
+    .home-input-wrap textarea::placeholder{color:var(--text-muted);opacity:0.6}
+    .input-row{display:flex;gap:1rem;margin-top:1rem;flex-wrap:wrap}
+    .input-mini{flex:1;min-width:140px;display:flex;flex-direction:column;gap:0.4rem}
+    .input-mini label{font-family:'DM Sans',sans-serif;font-size:0.7rem;color:var(--text-muted);letter-spacing:0.08em;text-transform:uppercase}
+    .input-mini input{background:rgba(160,120,70,0.15);border:1px solid var(--border);border-radius:0.5rem;padding:0.55rem 0.9rem;font-family:'DM Sans',sans-serif;font-size:0.9rem;color:var(--text);outline:none;transition:border-color 0.2s}
+    .input-mini input:focus{border-color:var(--accent)}
+    .type-chips{display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:1rem}
+    .chip{font-family:'DM Sans',sans-serif;font-size:0.75rem;padding:0.35rem 0.9rem;border-radius:999px;border:1px solid var(--border);background:rgba(160,120,70,0.12);color:var(--text-muted);cursor:pointer;transition:all 0.2s}
+    .chip.active,.chip:hover{background:rgba(100,70,30,0.22);color:var(--text);border-color:var(--accent)}
+    .globe-submit{position:absolute;bottom:1.4rem;right:1.8rem;display:flex;flex-direction:column;align-items:center;gap:0.3rem;cursor:pointer;transition:transform 0.2s}
+    .globe-submit:hover{transform:scale(1.08)}
+    .globe-submit svg{width:64px;height:64px;filter:drop-shadow(0 4px 12px rgba(80,50,10,0.25))}
+    .globe-submit span{font-family:'DM Sans',sans-serif;font-size:0.65rem;color:var(--text-muted);letter-spacing:0.08em;text-transform:uppercase}
+
+    /* WILDCARDS */
+    #page-wildcards{max-width:960px;margin:0 auto;width:100%}
+    .wc-header{margin-bottom:2rem;animation:fadeUp 0.6s ease both}
+    .wc-header h2{font-family:'Playfair Display',serif;font-size:clamp(1.8rem,5vw,3rem);color:var(--text);margin-bottom:0.4rem}
+    .wc-header p{font-family:'Lora',serif;font-style:italic;color:var(--text-muted);font-size:0.95rem}
+    .filter-row{display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:2rem;animation:fadeUp 0.6s 0.1s ease both}
+    .filter-chip{font-family:'DM Sans',sans-serif;font-size:0.75rem;padding:0.4rem 1rem;border-radius:999px;border:1px solid var(--border);background:rgba(160,120,70,0.12);color:var(--text-muted);cursor:pointer;transition:all 0.2s}
+    .filter-chip.active,.filter-chip:hover{background:rgba(100,70,30,0.22);color:var(--text);border-color:var(--accent)}
+    .cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.2rem}
+    .wc-card{background:var(--card-bg);backdrop-filter:blur(10px);border-radius:1.2rem;padding:1.4rem 1.5rem;border:1px solid var(--border);transition:transform 0.2s,box-shadow 0.2s;animation:fadeUp 0.5s ease both}
+    .wc-card:hover{transform:translateY(-4px);box-shadow:0 8px 30px rgba(80,50,10,0.15)}
+    .wc-card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.8rem}
+    .wc-user-id{font-family:'DM Sans',sans-serif;font-size:0.65rem;color:var(--text-muted);letter-spacing:0.05em}
+    .wc-badge{font-size:0.6rem;font-family:'DM Sans',sans-serif;letter-spacing:0.08em;text-transform:uppercase;padding:0.2rem 0.6rem;border-radius:999px}
+    .badge-s{background:rgba(180,80,50,0.12);color:#8b3a1a;border:1px solid rgba(180,80,50,0.2)}
+    .badge-i{background:rgba(60,120,60,0.12);color:#2d6b2d;border:1px solid rgba(60,120,60,0.2)}
+    .badge-f{background:rgba(80,60,140,0.1);color:#4a3880;border:1px solid rgba(80,60,140,0.2)}
+    .wc-route{font-family:'DM Sans',sans-serif;font-size:0.7rem;color:var(--text-muted);margin-bottom:0.7rem}
+    .wc-text{font-family:'Lora',serif;font-size:0.92rem;line-height:1.7;color:var(--text-mid);margin-bottom:1.2rem}
+    .wc-poll{border-top:1px solid var(--border);padding-top:1rem}
+    .poll-bar-bg{background:rgba(100,70,30,0.1);border-radius:999px;height:5px;margin-bottom:0.6rem;overflow:hidden}
+    .poll-bar-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#8b6030,#c49a50);transition:width 0.9s cubic-bezier(0.16,1,0.3,1)}
+    .poll-bottom{display:flex;justify-content:space-between;align-items:center}
+    .poll-count{font-family:'DM Sans',sans-serif;font-size:0.68rem;color:var(--text-muted)}
+    .poll-count b{color:var(--text)}
+    .relate-btn{font-family:'DM Sans',sans-serif;font-size:0.68rem;letter-spacing:0.05em;padding:0.35rem 0.9rem;border-radius:999px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;transition:all 0.2s}
+    .relate-btn:hover,.relate-btn.voted{background:rgba(100,70,30,0.15);color:var(--text);border-color:var(--accent)}
+
+    /* ABOUT */
+    #page-about{justify-content:center;max-width:700px;margin:0 auto;width:100%}
+    .about-card{background:var(--card-bg);backdrop-filter:blur(12px);border-radius:1.5rem;padding:2.5rem;border:1px solid var(--border);animation:fadeUp 0.7s ease both}
+    .about-card h2{font-family:'Playfair Display',serif;font-size:2rem;color:var(--text);margin-bottom:0.3rem}
+    .about-card .tagline{font-family:'Lora',serif;font-style:italic;color:var(--text-muted);margin-bottom:1.8rem;font-size:1rem}
+    .about-card p{font-family:'Lora',serif;font-size:0.95rem;line-height:1.8;color:var(--text-mid);margin-bottom:1.2rem}
+    .about-card p strong{color:var(--text);font-weight:600}
+    .about-steps{margin-top:1.5rem;display:flex;flex-direction:column;gap:1rem}
+    .about-step{display:flex;gap:1rem;align-items:flex-start}
+    .step-dot{width:28px;height:28px;border-radius:50%;background:rgba(100,70,30,0.15);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:0.8rem;color:var(--accent);flex-shrink:0;margin-top:0.1rem}
+    .about-step p{margin:0;font-size:0.88rem}
+
+    /* TOAST */
+    .toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--card-bg);backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:999px;padding:0.8rem 1.8rem;font-family:'Lora',serif;font-size:0.85rem;color:var(--text);z-index:999;opacity:0;transition:all 0.35s ease;white-space:nowrap;box-shadow:0 4px 20px rgba(80,50,10,0.2)}
+    .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+    .empty{grid-column:1/-1;text-align:center;padding:3rem;font-family:'Lora',serif;font-style:italic;color:var(--text-muted);font-size:0.95rem}
+
+    @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+
+    @media(max-width:600px){
+      nav{padding:1rem 1.2rem}
+      .nav-title{font-size:1.3rem}
+      .nav-links a{font-size:0.85rem;padding:0.25rem 0.6rem}
+      .page{padding:6rem 1.2rem 3rem}
+      .globe-submit{bottom:1rem;right:1rem}
+      .globe-submit svg{width:48px;height:48px}
+    }
+  </style>
+</head>
+<body>
+
+<div class="skyline-bg">
+  <svg viewBox="0 0 1440 400" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMax slice">
+    <rect x="0"   y="220" width="60"  height="180" fill="#8a6840"/>
+    <rect x="10"  y="180" width="40"  height="220" fill="#7a5c30"/>
+    <rect x="55"  y="200" width="50"  height="200" fill="#6e5228"/>
+    <rect x="100" y="150" width="35"  height="250" fill="#8a6840"/>
+    <rect x="130" y="240" width="45"  height="160" fill="#7a5c30"/>
+    <rect x="170" y="170" width="55"  height="230" fill="#6e5228"/>
+    <rect x="175" y="130" width="20"  height="50"  fill="#6e5228"/>
+    <rect x="220" y="260" width="40"  height="140" fill="#8a6840"/>
+    <rect x="255" y="190" width="65"  height="210" fill="#7a5c30"/>
+    <rect x="315" y="230" width="50"  height="170" fill="#6e5228"/>
+    <rect x="360" y="140" width="45"  height="260" fill="#8a6840"/>
+    <rect x="380" y="100" width="12"  height="50"  fill="#8a6840"/>
+    <rect x="400" y="210" width="70"  height="190" fill="#7a5c30"/>
+    <rect x="465" y="250" width="40"  height="150" fill="#6e5228"/>
+    <rect x="500" y="160" width="55"  height="240" fill="#8a6840"/>
+    <rect x="550" y="220" width="35"  height="180" fill="#7a5c30"/>
+    <rect x="580" y="180" width="60"  height="220" fill="#6e5228"/>
+    <rect x="636" y="140" width="50"  height="260" fill="#8a6840"/>
+    <rect x="640" y="110" width="10"  height="40"  fill="#8a6840"/>
+    <rect x="682" y="240" width="45"  height="160" fill="#7a5c30"/>
+    <rect x="722" y="200" width="55"  height="200" fill="#6e5228"/>
+    <rect x="772" y="160" width="40"  height="240" fill="#8a6840"/>
+    <rect x="807" y="250" width="60"  height="150" fill="#7a5c30"/>
+    <rect x="862" y="190" width="45"  height="210" fill="#6e5228"/>
+    <rect x="870" y="150" width="12"  height="50"  fill="#6e5228"/>
+    <rect x="902" y="230" width="55"  height="170" fill="#8a6840"/>
+    <rect x="952" y="150" width="40"  height="250" fill="#7a5c30"/>
+    <rect x="987" y="270" width="50"  height="130" fill="#6e5228"/>
+    <rect x="1032" y="200" width="60" height="200" fill="#8a6840"/>
+    <rect x="1086" y="170" width="45" height="230" fill="#7a5c30"/>
+    <rect x="1090" y="130" width="12" height="50"  fill="#7a5c30"/>
+    <rect x="1126" y="240" width="55" height="160" fill="#6e5228"/>
+    <rect x="1175" y="180" width="40" height="220" fill="#8a6840"/>
+    <rect x="1210" y="220" width="60" height="180" fill="#7a5c30"/>
+    <rect x="1265" y="150" width="50" height="250" fill="#6e5228"/>
+    <rect x="1310" y="260" width="45" height="140" fill="#8a6840"/>
+    <rect x="1350" y="190" width="55" height="210" fill="#7a5c30"/>
+    <rect x="1395" y="230" width="45" height="170" fill="#6e5228"/>
+    <!-- windows -->
+    <rect x="15"  y="195" width="8" height="6" fill="#c4a060" opacity="0.4"/>
+    <rect x="27"  y="195" width="8" height="6" fill="#c4a060" opacity="0.3"/>
+    <rect x="108" y="165" width="6" height="5" fill="#c4a060" opacity="0.4"/>
+    <rect x="265" y="170" width="8" height="6" fill="#c4a060" opacity="0.35"/>
+    <rect x="365" y="155" width="7" height="5" fill="#c4a060" opacity="0.4"/>
+    <rect x="506" y="175" width="8" height="6" fill="#c4a060" opacity="0.35"/>
+    <rect x="641" y="150" width="7" height="5" fill="#c4a060" opacity="0.4"/>
+    <rect x="778" y="170" width="7" height="5" fill="#c4a060" opacity="0.45"/>
+    <rect x="1038" y="215" width="8" height="6" fill="#c4a060" opacity="0.35"/>
+    <rect x="1270" y="165" width="7" height="5" fill="#c4a060" opacity="0.4"/>
+  </svg>
+</div>
+
+<nav>
+  <div class="nav-brand">
+    <div class="nav-title">The Wild Cards</div>
+    <div class="nav-sub">We.hear.you.</div>
+  </div>
+  <div class="nav-links">
+    <a class="active" onclick="showPage('home',this)">home</a>
+    <a onclick="showPage('wildcards',this)">WildCards</a>
+    <a onclick="showPage('about',this)">About</a>
+  </div>
+</nav>
+
+<!-- HOME -->
+<div class="page active" id="page-home">
+  <p class="home-question">So, what's bothering you nowadays gen z ...?</p>
+  <div class="home-input-wrap">
+    <span class="input-label">say it here :</span>
+    <textarea id="cardText" placeholder="a stereotype you've heard, something that impressed you, or just... anything." maxlength="400"></textarea>
+    <div class="type-chips">
+      <div class="chip active" data-type="stereotype">🚫 stereotype i've heard</div>
+      <div class="chip" data-type="impressive">✨ what impressed me</div>
+      <div class="chip" data-type="freeform">🃏 just a wildcard</div>
+    </div>
+    <div class="input-row">
+      <div class="input-mini">
+        <label>your region</label>
+        <input type="text" id="originInput" placeholder="e.g. India, Rajasthan" maxlength="50"/>
+      </div>
+      <div class="input-mini">
+        <label>about which culture?</label>
+        <input type="text" id="aboutInput" placeholder="e.g. Russia, Japan..." maxlength="50"/>
+      </div>
+    </div>
+    <div class="globe-submit" onclick="submitCard()">
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="44" stroke="#7a5c30" stroke-width="3" fill="rgba(160,120,70,0.15)"/>
+        <ellipse cx="50" cy="50" rx="22" ry="44" stroke="#7a5c30" stroke-width="2"/>
+        <line x1="6" y1="50" x2="94" y2="50" stroke="#7a5c30" stroke-width="2"/>
+        <path d="M 50 6 Q 72 28 72 50 Q 72 72 50 94" stroke="#7a5c30" stroke-width="2" fill="none"/>
+        <path d="M 50 6 Q 28 28 28 50 Q 28 72 50 94" stroke="#7a5c30" stroke-width="2" fill="none"/>
+        <line x1="6" y1="30" x2="94" y2="30" stroke="#7a5c30" stroke-width="1.5" opacity="0.5"/>
+        <line x1="6" y1="70" x2="94" y2="70" stroke="#7a5c30" stroke-width="1.5" opacity="0.5"/>
+        <ellipse cx="50" cy="88" rx="18" ry="6" fill="rgba(100,70,30,0.2)"/>
+      </svg>
+      <span>drop it</span>
+    </div>
+  </div>
+</div>
+
+<!-- WILDCARDS -->
+<div class="page" id="page-wildcards">
+  <div class="wc-header">
+    <h2>The Wild Cards</h2>
+    <p>real people, real truths, no filters.</p>
+  </div>
+  <div class="filter-row">
+    <div class="filter-chip active" data-filter="all">all cards</div>
+    <div class="filter-chip" data-filter="stereotype">stereotypes</div>
+    <div class="filter-chip" data-filter="impressive">impressive</div>
+    <div class="filter-chip" data-filter="freeform">wildcards</div>
+  </div>
+  <div class="cards-grid" id="cardsGrid"></div>
+</div>
+
+<!-- ABOUT -->
+<div class="page" id="page-about">
+  <div class="about-card">
+    <h2>The Wild Cards</h2>
+    <p class="tagline">We.hear.you.</p>
+    <p>A <strong>global card wall</strong> where anyone, anywhere, drops a card — anonymously — about a stereotype they've been handed, something genuinely impressive about another culture, or just an unfiltered truth.</p>
+    <p>Every card gets a <strong>public poll.</strong> How many people across the world felt the same thing? You'll find out. No sign up. No algorithm. Just humans being honest across borders.</p>
+    <div class="about-steps">
+      <div class="about-step"><div class="step-dot">1</div><p>You get a <strong>permanent ID</strong> — no account needed. Your device, your voice, forever.</p></div>
+      <div class="about-step"><div class="step-dot">2</div><p><strong>Drop a card.</strong> A stereotype, an impression, a truth. Totally freeform.</p></div>
+      <div class="about-step"><div class="step-dot">3</div><p>The <strong>world votes.</strong> Did they relate? The poll shows how universal your experience really is.</p></div>
+      <div class="about-step"><div class="step-dot">4</div><p>Stereotypes <strong>crumble</strong> when enough people say — same here.</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  function getUserId(){
+    let id=localStorage.getItem('twc_uid');
+    if(!id){id='GEN Z '+Math.floor(1000+Math.random()*89000);localStorage.setItem('twc_uid',id);}
+    return id;
+  }
+  const userId=getUserId();
+
+  const seedCards=[
+    {id:'s1',userId:'GEN Z 4821',type:'stereotype',origin:'Mexico',about:'USA',text:"People assumed I'd be amazed by everything in America because 'back home we have nothing.' I grew up with family dinners that lasted 4 hours. You call that nothing?",votes:342,ts:Date.now()-86400000*3},
+    {id:'s2',userId:'GEN Z 1103',type:'impressive',origin:'Nigeria',about:'Japan',text:"The fact that trains apologize when they're late. The whole culture of accountability baked into everyday infrastructure. We need to import that everywhere.",votes:891,ts:Date.now()-86400000*2},
+    {id:'s3',userId:'GEN Z 7756',type:'stereotype',origin:'India',about:'Russia',text:"Everyone said Russians are cold and unfriendly. My Russian classmate gave me half his lunch when I forgot mine. Cold? That man is warmer than most people I know.",votes:567,ts:Date.now()-86400000},
+    {id:'s4',userId:'GEN Z 2234',type:'freeform',origin:'Brazil',about:'Global',text:"We're all just trying to make our parents proud while figuring out what WE actually want. Every country. Every culture. Same chaos, different language.",votes:1204,ts:Date.now()-3600000*5},
+    {id:'s5',userId:'GEN Z 9912',type:'stereotype',origin:'South Korea',about:'India',text:"People said Indians are only good at tech and call centers. Then I heard classical Indian music for the first time and sat there for an hour just listening.",votes:433,ts:Date.now()-3600000*8},
+    {id:'s6',userId:'GEN Z 3301',type:'impressive',origin:'Germany',about:'India',text:"The number of languages one person casually speaks. My colleague from Rajasthan speaks Hindi, Rajasthani, English and Marwari like it's nothing. We struggle with two.",votes:678,ts:Date.now()-3600000*2}
+  ];
+
+  let userCards=JSON.parse(localStorage.getItem('twc_cards')||'[]');
+  let voted=JSON.parse(localStorage.getItem('twc_voted')||'[]');
+  function allCards(){return[...userCards,...seedCards].sort((a,b)=>b.ts-a.ts)}
+  function save(){localStorage.setItem('twc_cards',JSON.stringify(userCards));localStorage.setItem('twc_voted',JSON.stringify(voted))}
+
+  let selectedType='stereotype';
+  document.querySelectorAll('.chip').forEach(c=>{
+    c.addEventListener('click',()=>{
+      document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));
+      c.classList.add('active');selectedType=c.dataset.type;
+    });
+  });
+
+  function submitCard(){
+    const text=document.getElementById('cardText').value.trim();
+    const origin=document.getElementById('originInput').value.trim();
+    const about=document.getElementById('aboutInput').value.trim();
+    if(!text||text.length<15){showToast('say a little more...');return;}
+    userCards.unshift({id:'c'+Date.now(),userId,type:selectedType,origin:origin||'Anonymous',about:about||'The World',text,votes:0,ts:Date.now()});
+    save();
+    document.getElementById('cardText').value='';
+    document.getElementById('originInput').value='';
+    document.getElementById('aboutInput').value='';
+    showToast('card dropped ✦ the world can hear you now');
+    showPage('wildcards',document.querySelectorAll('.nav-links a')[1]);
+  }
+
+  function vote(id){
+    if(voted.includes(id)){showToast('you already related to this one ✦');return;}
+    const c=allCards().find(x=>x.id===id);
+    if(!c)return;
+    const uc=userCards.find(x=>x.id===id);
+    const sc=seedCards.find(x=>x.id===id);
+    if(uc)uc.votes++;else if(sc)sc.votes++;
+    voted.push(id);save();
+    const bar=document.getElementById('bar_'+id);
+    const cnt=document.getElementById('cnt_'+id);
+    const btn=document.getElementById('rel_'+id);
+    const updated=(uc||sc);
+    if(bar)bar.style.width=Math.min((updated.votes/1500)*100,100)+'%';
+    if(cnt)cnt.innerHTML=`<b>${updated.votes}</b> people related`;
+    if(btn){btn.classList.add('voted');btn.textContent='related ✓';}
+  }
+
+  let currentFilter='all';
+  function renderCards(filter){
+    currentFilter=filter;
+    const grid=document.getElementById('cardsGrid');
+    const list=allCards().filter(c=>filter==='all'||c.type===filter);
+    if(!list.length){grid.innerHTML='<div class="empty">no cards here yet — be the first to drop one.</div>';return;}
+    const badges={stereotype:'<span class="wc-badge badge-s">stereotype</span>',impressive:'<span class="wc-badge badge-i">impressive</span>',freeform:'<span class="wc-badge badge-f">wildcard</span>'};
+    grid.innerHTML=list.map((c,i)=>{
+      const pct=Math.min((c.votes/1500)*100,100);
+      const isV=voted.includes(c.id);
+      return`<div class="wc-card" style="animation-delay:${i*0.05}s">
+        <div class="wc-card-top"><span class="wc-user-id">${c.userId}</span>${badges[c.type]||badges.freeform}</div>
+        <div class="wc-route">${c.origin} → ${c.about}</div>
+        <div class="wc-text">${esc(c.text)}</div>
+        <div class="wc-poll">
+          <div class="poll-bar-bg"><div class="poll-bar-fill" id="bar_${c.id}" style="width:${pct}%"></div></div>
+          <div class="poll-bottom">
+            <div class="poll-count" id="cnt_${c.id}"><b>${c.votes}</b> people related</div>
+            <button class="relate-btn ${isV?'voted':''}" id="rel_${c.id}" onclick="vote('${c.id}')">${isV?'related ✓':'i relate'}</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function esc(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+  document.querySelectorAll('.filter-chip').forEach(fc=>{
+    fc.addEventListener('click',()=>{
+      document.querySelectorAll('.filter-chip').forEach(x=>x.classList.remove('active'));
+      fc.classList.add('active');renderCards(fc.dataset.filter);
+    });
+  });
+
+  function showPage(name,el){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('active'));
+    document.getElementById('page-'+name).classList.add('active');
+    if(el)el.classList.add('active');
+    if(name==='wildcards')renderCards(currentFilter);
+  }
+
+  function showToast(msg){
+    const t=document.getElementById('toast');
+    t.textContent=msg;t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'),3200);
+  }
+
+  renderCards('all');
+</script>
+</body>
+</html>
