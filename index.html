@@ -364,10 +364,7 @@
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   // SEED CARDS
-  const seedCards=[
-  {id:'s3',user_id:'GEN Z 7756',type:'stereotype',origin:'India',about:'Russia',text:"Everyone said Russians are cold and unfriendly. My Russian classmate gave me half his lunch when I forgot mine. Cold? That man is warmer than most people I know.",votes:567,created_at:new Date(Date.now()-86400000).toISOString()},
-    {id:'s6',user_id:'GEN Z 3301',type:'impressive',origin:'Germany',about:'India',text:"The number of languages one person casually speaks. My colleague from Rajasthan speaks Hindi, Rajasthani, English and Marwari like it's nothing. We struggle with two.",votes:678,created_at:new Date(Date.now()-3600000*2).toISOString()}
-  ];
+  const seedCards=[];
 
   // USER ID
   let userId = localStorage.getItem('twc_uid');
