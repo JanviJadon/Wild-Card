@@ -522,14 +522,22 @@ if (currentSort === 'votes') {
 
     const filteredSeeds = filter === 'all' ? [...seedCards] : seedCards.filter(c => c.type === filter);
 
-    // merge and sort
+ // 1. Updated Merge & Sort Logic
     let all = [...dbCards, ...filteredSeeds];
-    if (currentSort === 'votes') {
-      all.sort((a, b) => b.votes - a.votes);
-    } else {
-      all.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    }
+    
+    all.sort((a, b) => {
+      // First priority: Pinned cards always go to the top
+      if (a.is_pinned && !b.is_pinned) return -1;
+      if (!a.is_pinned && b.is_pinned) return 1;
 
+      // Second priority: Use your selected sort (votes or date)
+      if (currentSort === 'votes') {
+        return b.votes - a.votes;
+      } else {
+        return new Date(b.created_at) - new Date(a.created_at);
+      }
+    });
+    
     if (!all.length) {
       grid.innerHTML = '<div class="empty">no cards here yet â€” be the first to drop one.</div>';
       return;
