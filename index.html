@@ -509,10 +509,12 @@
     try {
       let query = sb.from('cards').select('*');
       if (filter !== 'all') query = query.eq('type', filter);
-      if (currentSort === 'votes') {
-        query = query.order('votes', { ascending: false });
+if (currentSort === 'votes') {
+        query = query.order('is_pinned', { ascending: false })
+                     .order('votes', { ascending: false });
       } else {
-        query = query.order('created_at', { ascending: false });
+        query = query.order('is_pinned', { ascending: false })
+                     .order('created_at', { ascending: false });
       }
       const { data } = await query;
       dbCards = data || [];
