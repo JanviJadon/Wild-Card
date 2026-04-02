@@ -587,14 +587,41 @@ if (currentSort === 'votes') {
     window.scrollTo(0,0);
   }
 
-  // TOAST
+// TOAST
   function showToast(msg) {
     const t = document.getElementById('toast');
-    t.textContent = msg; t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 3200);
+    t.innerText = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  } // <--- MAKE SURE THIS BRACKET IS HERE BEFORE STARTING NEW CODE
+
+  // PASTE THE INIT USER FUNCTION HERE:
+  async function initUser() {
+    try {
+      let deviceKey = localStorage.getItem('twc_device_key');
+      if (!deviceKey) {
+        deviceKey = 'dk_' + Math.random().toString(36).substr(2,9) + Date.now().toString(36);
+        localStorage.setItem('twc_device_key', deviceKey);
+      }
+      
+      const { data: existing } = await sb.from('users').select('gen_z_number').eq('device_key', deviceKey).single();
+      
+      if (existing) {
+        userId = 'GEN Z ' + existing.gen_z_number;
+      } else {
+        const { data: newUser } = await sb.from('users')
+          .insert({ device_key: deviceKey })
+          .select('gen_z_number')
+          .single();
+          
+        if (newUser) userId = 'GEN Z ' + newUser.gen_z_number;
+      }
+      localStorage.setItem('twc_uid', userId);
+    } catch(e) {
+      if (!userId) userId = 'GEN Z ???';
+    }
   }
 
-  // INIT
+  // INIT (This triggers the functions above)
   initUser();
   renderCards('all');
 </script>
