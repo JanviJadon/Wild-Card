@@ -437,7 +437,7 @@
 
   // VOTE
   async function vote(id) {
-    if (voted.includes(id)) { showToast('you already related to this one'); return; }
+if (voted.includes(id)) { showToast('you already related to this one'); return; }
     const seed = seedCards.find(c => c.id === id);
     if (seed) {
       seed.votes++; voted.push(id); saveVoted();
@@ -521,14 +521,14 @@
           <span class="wc-user-id">${uid}</span>
           ${badges[c.type]||badges.freeform}
         </div>
-        <div class="wc-route">${c.origin} → ${c.about}</div>
+  <div class="wc-route">${c.origin} → ${c.about}</div>
         <div class="wc-text">${esc(c.text)}</div>
         <div class="wc-poll">
           <div class="poll-bar-bg"><div class="poll-bar-fill" id="bar_${c.id}" style="width:${pct}%"></div></div>
           <div class="poll-bottom">
             <div class="poll-count" id="cnt_${c.id}"><b>${c.votes}</b> people related</div>
             <button class="relate-btn ${isV?'voted':''}" id="rel_${c.id}" onclick="vote('${c.id}')">
-              ${isV?'related :'i relate'}
+ ${isV?'related ✓':'i relate'}
             </button>
           </div>
         </div>
