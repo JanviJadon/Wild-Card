@@ -365,7 +365,6 @@
 
   // SEED CARDS
   const seedCards=[
-    {id:'s1',user_id:'GEN Z 4821',type:'stereotype',origin:'Mexico',about:'USA',text:"People assumed I'd be amazed by everything in America because 'back home we have nothing.' I grew up with family dinners that lasted 4 hours. You call that nothing?",votes:342,created_at:new Date(Date.now()-86400000*3).toISOString()},
     {id:'s2',user_id:'GEN Z 1103',type:'impressive',origin:'Nigeria',about:'Japan',text:"The fact that trains apologize when they're late. The whole culture of accountability baked into everyday infrastructure. We need to import that everywhere.",votes:891,created_at:new Date(Date.now()-86400000*2).toISOString()},
     {id:'s3',user_id:'GEN Z 7756',type:'stereotype',origin:'India',about:'Russia',text:"Everyone said Russians are cold and unfriendly. My Russian classmate gave me half his lunch when I forgot mine. Cold? That man is warmer than most people I know.",votes:567,created_at:new Date(Date.now()-86400000).toISOString()},
     {id:'s4',user_id:'GEN Z 2234',type:'freeform',origin:'Brazil',about:'Global',text:"We're all just trying to make our parents proud while figuring out what WE actually want. Every country. Every culture. Same chaos, different language.",votes:1204,created_at:new Date(Date.now()-3600000*5).toISOString()},
@@ -481,7 +480,7 @@
     const btn = document.getElementById('rel_'+id);
     if (bar) bar.style.width = Math.min((votes/1500)*100,100)+'%';
     if (cnt) cnt.innerHTML = `<b>${votes}</b> people related`;
-    if (btn) { btn.classList.add('voted'); btn.textContent = 'related âœ“'; }
+    if (btn) { btn.classList.add('voted'); btn.textContent = 'related'; }
   }
 
   // SORT
