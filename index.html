@@ -435,22 +435,44 @@
     }
   }
 
-  // VOTE
+// VOTE (Fixed to persist all votes to Supabase)
   async function vote(id) {
-if (voted.includes(id)) { showToast('you already related to this one'); return; }
-    const seed = seedCards.find(c => c.id === id);
-    if (seed) {
-      seed.votes++; voted.push(id); saveVoted();
-      updateVoteUI(id, seed.votes); return;
-    }
+    if (voted.includes(id)) { showToast('you already related to this one'); return; }
+    
     try {
-      const { data: card } = await sb.from('cards').select('votes').eq('id', id).single();
-      if (!card) return;
+      // 1. First, find the current vote count from the database
+      const { data: card, error: fetchError } = await sb.from('cards').select('votes').eq('id', id).single();
+      
+      // 2. If the card isn't in the DB yet (it's a Seed Card), we skip DB update and just update UI
+      // Or better: Treat all cards as DB cards for real persistence.
+      if (!card) {
+         // Fallback for seed cards if they aren't in your DB table yet
+         const seed = seedCards.find(c => c.id === id);
+         if (seed) {
+           seed.votes++; 
+           voted.push(id); saveVoted();
+           updateVoteUI(id, seed.votes);
+           showToast('Voted on demo card (won\'t persist on refresh)');
+         }
+         return;
+      }
+
       const newVotes = card.votes + 1;
-      await sb.from('cards').update({ votes: newVotes }).eq('id', id);
-      voted.push(id); saveVoted();
+      
+      // 3. Update the database
+      const { error: updateError } = await sb.from('cards').update({ votes: newVotes }).eq('id', id);
+      
+      if (updateError) throw updateError;
+
+      // 4. Update the Local Storage and UI
+      voted.push(id); 
+      saveVoted();
       updateVoteUI(id, newVotes);
-    } catch(e) { showToast('couldn\'t save vote, try again...'); }
+      
+    } catch(e) { 
+      console.error(e);
+      showToast('couldn\'t save vote, try again...'); 
+    }
   }
 
   function updateVoteUI(id, votes) {
