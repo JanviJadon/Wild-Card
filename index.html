@@ -362,8 +362,7 @@
   const SUPABASE_URL = 'https://ketbeakwvwnkezkmelff.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtldGJlYWt3dndua2V6a21lbGZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNTMxODcsImV4cCI6MjA5MDYyOTE4N30.5fxnIWomxQiEVj4attkcxPLceGiOsVrcyfxOhRH-Bbk';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-  let userId = localStorage.getItem('twc_uid') || 'GEN Z ???';
+  let userId = localStorage.getItem('twc_uid') || null;
   let voted = JSON.parse(localStorage.getItem('twc_voted') || '[]');
   let selectedType = 'stereotype';
   let currentFilter = 'all';
