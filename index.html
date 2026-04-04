@@ -404,8 +404,8 @@
     });
   });
 
-  // SUBMIT
-async function submitCard() {
+ // SUBMIT
+  async function submitCard() {
     const text   = document.getElementById('cardText').value.trim();
     const origin = document.getElementById('originInput').value.trim();
     const about  = document.getElementById('aboutInput').value.trim();
@@ -416,30 +416,28 @@ async function submitCard() {
     }
 
     try {
-      // 1. Insert the data
+      // Ensure 'sb', 'userId', and 'selectedType' are defined at the top of your script
       const { error } = await sb.from('cards').insert({
         user_id: userId,
         type: selectedType,
         origin: origin || 'Anonymous',
         about: about || 'The World',
-        text,
+        text: text,
         votes: 0
       }).select();
 
       if (error) throw error;
 
-      // 2. Clear inputs
       document.getElementById('cardText').value = '';
       document.getElementById('originInput').value = '';
       document.getElementById('aboutInput').value = '';
 
-      // 3. Success UI
       showToast('card dropped ✧');
       showPage('wildcards', document.querySelectorAll('.nav-links a')[1]);
 
     } catch(e) {
-      console.error("Submission handled:", e);
-      // Even if the Edge Function pings an error, we move the user forward
+      console.error("Submission error:", e);
+      // This ensures the UI moves forward even if the Discord webhook/Edge function hangs
       showPage('wildcards', document.querySelectorAll('.nav-links a')[1]);
       showToast('card dropped ✧');
     }
@@ -624,7 +622,7 @@ if (currentSort === 'votes') {
           .select('gen_z_number')
           .single();
           
-        if (newUser) userId = 'GEN Z ' + newUser.gen_z_number;
+        if (newUser) userId ='GEN Z ' + newUser.gen_z_number;
       }
       localStorage.setItem('twc_uid', userId);
     } catch(e) {
