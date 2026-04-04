@@ -402,12 +402,13 @@
       document.getElementById('cardText').value = '';
       document.getElementById('originInput').value = '';
       document.getElementById('aboutInput').value = '';
-      showToast('card dropped ✧');
-      showPage('wildcards', document.querySelectorAll('.nav-links a')[1]);
-    } catch(e) {
-      console.error(e);
-      showPage('wildcards', document.querySelectorAll('.nav-links a')[1]);
-    }
+showToast('card dropped ✧');
+showPage('wildcards', document.querySelectorAll('.nav-links a')[1]);
+renderCards('all');
+} catch(e) {
+  console.error(e);
+  showToast('something went wrong...');
+}
   }
 
   // VOTE / RELATE
@@ -519,9 +520,8 @@
     } catch(e) { console.error(e); }
   }
 
-  initUser();
-  // Ensure cards load if starting on the wildcards page
-  if (document.getElementById('page-wildcards').classList.contains('active')) renderCards('all');
+initUser();
+renderCards('all');
 </script>
 </body>
 </html>
