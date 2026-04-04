@@ -435,7 +435,7 @@
     if (btn) { btn.classList.add('voted'); btn.textContent = 'related ✓'; }
   }
 
-  // RENDER CARDS
+  // RENDER CARDS (With Pinned Logic Restored)
   async function renderCards(filter) {
     currentFilter = filter;
     const grid = document.getElementById('cardsGrid');
@@ -443,17 +443,22 @@
     try {
       let query = sb.from('cards').select('*');
       if (filter !== 'all') query = query.eq('type', filter);
-      if (currentSort === 'votes') {
-        query = query.order('votes', { ascending: false });
-      } else {
-        query = query.order('created_at', { ascending: false });
-      }
+      
       const { data: all, error } = await query;
       if (error) throw error;
       if (!all || all.length === 0) {
         grid.innerHTML = '<div class="empty">no cards here yet — be the first.</div>';
         return;
       }
+
+      // Restore the Pinned & Sorting Logic
+      all.sort((a, b) => {
+        if (a.is_pinned && !b.is_pinned) return -1;
+        if (!a.is_pinned && b.is_pinned) return 1;
+        if (currentSort === 'votes') return b.votes - a.votes;
+        return new Date(b.created_at) - new Date(a.created_at);
+      });
+
       grid.innerHTML = all.map((c, i) => {
         const pct = Math.min((c.votes/1500)*100, 100);
         const isV = voted.includes(c.id);
@@ -515,6 +520,7 @@
   }
 
   initUser();
+  // Ensure cards load if starting on the wildcards page
   if (document.getElementById('page-wildcards').classList.contains('active')) renderCards('all');
 </script>
 </body>
