@@ -363,14 +363,11 @@
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtldGJlYWt3dndua2V6a21lbGZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNTMxODcsImV4cCI6MjA5MDYyOTE4N30.5fxnIWomxQiEVj4attkcxPLceGiOsVrcyfxOhRH-Bbk';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  const seedCards = [];
   let userId = localStorage.getItem('twc_uid') || 'GEN Z ???';
   let voted = JSON.parse(localStorage.getItem('twc_voted') || '[]');
   let selectedType = 'stereotype';
   let currentFilter = 'all';
   let currentSort = 'recent';
-
-  function saveVoted() { localStorage.setItem('twc_voted', JSON.stringify(voted)); }
 
   const badges = {
     stereotype: '<span class="wc-badge badge-s">stereotype</span>',
@@ -378,7 +375,9 @@
     freeform: '<span class="wc-badge badge-f">wildcard</span>'
   };
 
-  // CHIP LOGIC
+  function saveVoted() { localStorage.setItem('twc_voted', JSON.stringify(voted)); }
+
+  // CHIP SELECTION
   document.querySelectorAll('.chip').forEach(c => {
     c.addEventListener('click', () => {
       document.querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
@@ -387,61 +386,43 @@
     });
   });
 
-  // SUBMIT
+  // SUBMIT CARD
   async function submitCard() {
     const text = document.getElementById('cardText').value.trim();
     const origin = document.getElementById('originInput').value.trim();
     const about = document.getElementById('aboutInput').value.trim();
-
-    if (!text || text.length < 15) { 
-      showToast('say a little more...'); 
-      return; 
-    }
-
+    if (!text || text.length < 15) { showToast('say a little more...'); return; }
     try {
       const { error } = await sb.from('cards').insert({
-        user_id: userId,
-        type: selectedType,
-        origin: origin || 'Anonymous',
-        about: about || 'The World',
-        text: text,
-        votes: 0
+        user_id: userId, type: selectedType,
+        origin: origin || 'Anonymous', about: about || 'The World',
+        text: text, votes: 0
       }).select();
-
       if (error) throw error;
-
       document.getElementById('cardText').value = '';
       document.getElementById('originInput').value = '';
       document.getElementById('aboutInput').value = '';
       showToast('card dropped ✧');
       showPage('wildcards', document.querySelectorAll('.nav-links a')[1]);
     } catch(e) {
-      console.error("Submission error:", e);
+      console.error(e);
       showPage('wildcards', document.querySelectorAll('.nav-links a')[1]);
-      showToast('card dropped ✧');
     }
   }
 
-  // VOTE
+  // VOTE / RELATE
   async function vote(id) {
     if (voted.includes(id)) { showToast('you already related to this one'); return; }
     try {
       const { data: card } = await sb.from('cards').select('votes').eq('id', id).single();
       if (!card) return;
-
       const newVotes = (card.votes || 0) + 1;
-      const { error } = await sb.from('cards').update({ votes: newVotes }).eq('id', id).select();
-      
-      if (error) throw error;
-
-      voted.push(id); 
-      saveVoted();
+      await sb.from('cards').update({ votes: newVotes }).eq('id', id);
+      voted.push(id); saveVoted();
       updateVoteUI(id, newVotes);
-    } catch(e) { 
-      console.error("Vote handled silently:", e);
-      voted.push(id); 
-      saveVoted();
-      showToast('related ✓'); 
+    } catch(e) {
+      voted.push(id); saveVoted();
+      showToast('related ✓');
     }
   }
 
@@ -454,51 +435,42 @@
     if (btn) { btn.classList.add('voted'); btn.textContent = 'related ✓'; }
   }
 
-  // RENDER
+  // RENDER CARDS
   async function renderCards(filter) {
     currentFilter = filter;
     const grid = document.getElementById('cardsGrid');
     grid.innerHTML = '<div class="loading">loading cards...</div>';
-
     try {
       let query = sb.from('cards').select('*');
       if (filter !== 'all') query = query.eq('type', filter);
-      
       if (currentSort === 'votes') {
-        query = query.order('is_pinned', { ascending: false }).order('votes', { ascending: false });
+        query = query.order('votes', { ascending: false });
       } else {
-        query = query.order('is_pinned', { ascending: false }).order('created_at', { ascending: false });
+        query = query.order('created_at', { ascending: false });
       }
-
-      const { data: all } = await query;
-
+      const { data: all, error } = await query;
+      if (error) throw error;
       if (!all || all.length === 0) {
-        grid.innerHTML = '<div class="empty">no cards here yet — be the first to drop one.</div>';
+        grid.innerHTML = '<div class="empty">no cards here yet — be the first.</div>';
         return;
       }
-
       grid.innerHTML = all.map((c, i) => {
         const pct = Math.min((c.votes/1500)*100, 100);
         const isV = voted.includes(c.id);
         return `<div class="wc-card" style="animation-delay:${i*0.04}s">
-          <div class="wc-card-top">
-            <span class="wc-user-id">${c.user_id || 'GEN Z ???'}</span>
-            ${badges[c.type] || badges.freeform}
-          </div>
+          <div class="wc-card-top"><span class="wc-user-id">${c.user_id || 'GEN Z ???'}</span>${badges[c.type] || badges.freeform}</div>
           <div class="wc-route">${c.origin} → ${c.about}</div>
           <div class="wc-text">${esc(c.text)}</div>
           <div class="wc-poll">
             <div class="poll-bar-bg"><div class="poll-bar-fill" id="bar_${c.id}" style="width:${pct}%"></div></div>
             <div class="poll-bottom">
               <div class="poll-count" id="cnt_${c.id}"><b>${c.votes}</b> people related</div>
-              <button class="relate-btn ${isV?'voted':''}" id="rel_${c.id}" onclick="vote('${c.id}')">
-                ${isV ? 'related ✓' : 'i relate'}
-              </button>
+              <button class="relate-btn ${isV?'voted':''}" onclick="vote('${c.id}')">${isV?'related ✓':'i relate'}</button>
             </div>
           </div>
         </div>`;
       }).join('');
-    } catch(e) { console.error(e); }
+    } catch(e) { console.error(e); grid.innerHTML = '<div class="empty">error loading cards.</div>'; }
   }
 
   function esc(t){ return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -509,14 +481,6 @@
     el.classList.add('active');
     renderCards(currentFilter);
   }
-
-  document.querySelectorAll('.filter-chip').forEach(fc => {
-    fc.addEventListener('click', () => {
-      document.querySelectorAll('.filter-chip').forEach(x => x.classList.remove('active'));
-      fc.classList.add('active'); 
-      renderCards(fc.dataset.filter);
-    });
-  });
 
   function showPage(name, el) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -541,9 +505,8 @@
         localStorage.setItem('twc_device_key', deviceKey);
       }
       const { data: existing } = await sb.from('users').select('gen_z_number').eq('device_key', deviceKey).single();
-      if (existing) {
-        userId = 'GEN Z ' + existing.gen_z_number;
-      } else {
+      if (existing) { userId = 'GEN Z ' + existing.gen_z_number; } 
+      else {
         const { data: newUser } = await sb.from('users').insert({ device_key: deviceKey }).select('gen_z_number').single();
         if (newUser) userId = 'GEN Z ' + newUser.gen_z_number;
       }
@@ -552,7 +515,7 @@
   }
 
   initUser();
-  renderCards('all');
+  if (document.getElementById('page-wildcards').classList.contains('active')) renderCards('all');
 </script>
 </body>
 </html>
