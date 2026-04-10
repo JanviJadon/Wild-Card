@@ -516,7 +516,7 @@ async function submitCard() {
     setTimeout(() => t.classList.remove('show'), 3000);
   }
 
-  async function initUser() {
+async function initUser() {
     try {
       let deviceKey = localStorage.getItem('twc_device_key');
       if (!deviceKey) {
@@ -524,25 +524,31 @@ async function submitCard() {
         localStorage.setItem('twc_device_key', deviceKey);
       }
       const { data: existing } = await sb.from('users').select('gen_z_number').eq('device_key', deviceKey).single();
-      if (existing) { userId = 'GEN Z ' + existing.gen_z_number; } 
-      else {
-        // Send ONLY the device key. Supabase will auto-generate the next number.
+      
+      if (existing) { 
+        userId = 'GEN Z ' + existing.gen_z_number; 
+      } else {
         const { data: newUser } = await sb.from('users')
           .insert({ device_key: deviceKey })
-          .select('gen_z_number') // <--- This tells Supabase to send the number back
+          .select('gen_z_number')
           .single();
         
         if (newUser && newUser.gen_z_number) { 
           userId = 'GEN Z ' + newUser.gen_z_number; 
         }
+      } // <--- Added this to close the 'else'
+      
       localStorage.setItem('twc_uid', userId);
-    } catch(e) { console.error(e); }
+    } catch(e) { 
+      console.error(e); 
+    } // <--- Added this to close the 'try'
   }
-
 async function startApp() {
   await initUser();
   renderCards('all');
 }
+
+startApp(); // <--- ADD THIS LINE HERE
 </script>
 </body>
 </html>
