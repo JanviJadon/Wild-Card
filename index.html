@@ -362,7 +362,7 @@
   const SUPABASE_URL = 'https://ketbeakwvwnkezkmelff.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtldGJlYWt3dndua2V6a21lbGZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNTMxODcsImV4cCI6MjA5MDYyOTE4N30.5fxnIWomxQiEVj4attkcxPLceGiOsVrcyfxOhRH-Bbk';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  let userId = localStorage.getItem('twc_uid') || null;
+  let userId = localStorage.getItem('twc_uid') || ('GEN Z ' + Math.floor(1000 + Math.random() * 9000));
   let voted = JSON.parse(localStorage.getItem('twc_voted') || '[]');
   let selectedType = 'stereotype';
   let currentFilter = 'all';
@@ -386,28 +386,42 @@
   });
 
   // SUBMIT CARD
-  async function submitCard() {
+async function submitCard() {
     const text = document.getElementById('cardText').value.trim();
     const origin = document.getElementById('originInput').value.trim();
     const about = document.getElementById('aboutInput').value.trim();
+    
     if (!text || text.length < 15) { showToast('say a little more...'); return; }
+
+    // THE VIBE-FIX: If userId is still broken or null, fix it right now!
+    if (!userId || userId === "null" || userId.includes('undefined')) {
+       userId = 'GEN Z ' + Math.floor(1000 + Math.random() * 9000);
+       localStorage.setItem('twc_uid', userId);
+    }
+
     try {
       const { error } = await sb.from('cards').insert({
-        user_id: userId, type: selectedType,
-        origin: origin || 'Anonymous', about: about || 'The World',
-        text: text, votes: 0
+        user_id: userId, // This will now always have a value
+        type: selectedType,
+        origin: origin || 'Anonymous', 
+        about: about || 'The World',
+        text: text, 
+        votes: 0
       }).select();
+
       if (error) throw error;
+      
+      // Clear inputs and show success
       document.getElementById('cardText').value = '';
       document.getElementById('originInput').value = '';
       document.getElementById('aboutInput').value = '';
-showToast('card dropped ✧');
-showPage('wildcards', document.querySelectorAll('.nav-links a')[1]);
-renderCards('all');
-} catch(e) {
-  console.error(e);
-  showToast('something went wrong...');
-}
+      showToast('card dropped ✧');
+      showPage('wildcards', document.querySelectorAll('.nav-links a')[1]);
+      renderCards('all');
+    } catch(e) {
+      console.error(e);
+      showToast('something went wrong...');
+    }
   }
 
   // VOTE / RELATE
@@ -512,15 +526,23 @@ renderCards('all');
       const { data: existing } = await sb.from('users').select('gen_z_number').eq('device_key', deviceKey).single();
       if (existing) { userId = 'GEN Z ' + existing.gen_z_number; } 
       else {
-        const { data: newUser } = await sb.from('users').insert({ device_key: deviceKey }).select('gen_z_number').single();
-        if (newUser) userId = 'GEN Z ' + newUser.gen_z_number;
-      }
+        // Send ONLY the device key. Supabase will auto-generate the next number.
+        const { data: newUser } = await sb.from('users')
+          .insert({ device_key: deviceKey })
+          .select('gen_z_number') // <--- This tells Supabase to send the number back
+          .single();
+        
+        if (newUser && newUser.gen_z_number) { 
+          userId = 'GEN Z ' + newUser.gen_z_number; 
+        }
       localStorage.setItem('twc_uid', userId);
     } catch(e) { console.error(e); }
   }
 
-initUser();
-renderCards('all');
+async function startApp() {
+  await initUser();
+  renderCards('all');
+}
 </script>
 </body>
 </html>
