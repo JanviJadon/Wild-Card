@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-DJML4HN9FB"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DJML4HN9FB"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -67,7 +66,6 @@
     }
     .nav-brand{display:flex;flex-direction:column;gap:0.1rem}
     .nav-title{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--text);line-height:1}
-    /* 10% bigger nav-sub */
     .nav-sub{font-family:'Lora',serif;font-size:0.94rem;color:var(--text-mid);font-style:italic}
     .nav-links{
       display:flex;gap:0.3rem;align-items:center;
@@ -103,7 +101,6 @@
       border:1px solid var(--border);
       animation:fadeUp 0.7s 0.1s ease both;position:relative;
     }
-    /* darkened input label */
     .input-label{
       font-family:'Lora',serif;font-size:0.95rem;
       color:var(--text-mid);
@@ -115,7 +112,6 @@
       color:var(--text);
       resize:none;line-height:1.7;min-height:90px;
     }
-    /* darkened placeholder */
     .home-input-wrap textarea::placeholder{color:var(--text-mid);opacity:0.75}
     .input-row{display:flex;gap:0.8rem;margin-top:1rem;flex-wrap:wrap}
     .input-mini{flex:1;min-width:130px;display:flex;flex-direction:column;gap:0.35rem}
@@ -161,7 +157,6 @@
       padding:0.35rem 0.9rem;border-radius:999px;
       border:1px solid var(--border);
       background:rgba(160,120,70,0.15);
-      /* darkened filter chip text */
       color:var(--text-mid);
       cursor:pointer;transition:all 0.2s;
     }
@@ -281,16 +276,15 @@
   </div>
 </nav>
 
-<!-- HOME -->
 <div class="page active" id="page-home">
   <p class="home-question">So, what's bothering you nowadays gen z ...?</p>
   <div class="home-input-wrap">
     <span class="input-label">say it here :</span>
     <textarea id="cardText" placeholder="a stereotype you've heard, something that impressed you, or just... anything." maxlength="400"></textarea>
     <div class="type-chips">
-      <div class="chip active" data-type="stereotype">  🚫  stereotype i've heard</div>
-      <div class="chip" data-type="impressive"> ✨ what impressed me</div>
-      <div class="chip" data-type="freeform"> 🃏 just a wildcard</div>
+      <div class="chip active" data-type="stereotype"> ?? stereotype i've heard</div>
+      <div class="chip" data-type="impressive"> ? what impressed me</div>
+      <div class="chip" data-type="freeform"> ?? just a wildcard</div>
     </div>
     <div class="input-row">
       <div class="input-mini">
@@ -318,7 +312,6 @@
   </div>
 </div>
 
-<!-- WILDCARDS -->
 <div class="page" id="page-wildcards">
   <div class="wc-header">
     <h2>The Wild Cards</h2>
@@ -340,7 +333,6 @@
   </div>
 </div>
 
-<!-- ABOUT -->
 <div class="page" id="page-about">
   <div class="about-card">
     <h2>The Wild Cards</h2>
@@ -362,7 +354,8 @@
   const SUPABASE_URL = 'https://ketbeakwvwnkezkmelff.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtldGJlYWt3dndua2V6a21lbGZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNTMxODcsImV4cCI6MjA5MDYyOTE4N30.5fxnIWomxQiEVj4attkcxPLceGiOsVrcyfxOhRH-Bbk';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-let userId = localStorage.getItem('twc_uid') || null;
+  
+  let userId = localStorage.getItem('twc_uid') || null;
   let voted = JSON.parse(localStorage.getItem('twc_voted') || '[]');
   let selectedType = 'stereotype';
   let currentFilter = 'all';
@@ -385,44 +378,45 @@ let userId = localStorage.getItem('twc_uid') || null;
     });
   });
 
-  // SUBMIT CARD
-async function submitCard() {
-  // New safety check
-    if (!userId || userId === "null") {
-        showToast('still assigning your GEN Z number... wait 1 sec');
-        await initUser(); // Try to fetch it again
-        return;
-      }
+  // FILTER CHIP SELECTION (Fixed Category Sort)
+  document.querySelectorAll('.filter-chip').forEach(f => {
+    f.addEventListener('click', () => {
+      document.querySelectorAll('.filter-chip').forEach(x => x.classList.remove('active'));
+      f.classList.add('active');
+      renderCards(f.dataset.filter);
+    });
+  });
 
-    const text = document.getElementById('cardText').value.trim();
+  // SUBMIT CARD
+  async function submitCard() {
+    if (!userId || userId === "null") {
+        showToast('establishing your gen z identity... try again in a sec');
+        await initUser();
+        return;
+    }
+
     const text = document.getElementById('cardText').value.trim();
     const origin = document.getElementById('originInput').value.trim();
     const about = document.getElementById('aboutInput').value.trim();
     
     if (!text || text.length < 15) { showToast('say a little more...'); return; }
 
-    // THE VIBE-FIX: If userId is still broken or null, fix it right now!
-    if (!userId || userId === "null" || userId.includes('undefined')) {
-       localStorage.setItem('twc_uid', userId);
-    }
-
     try {
       const { error } = await sb.from('cards').insert({
-        user_id: userId, // This will now always have a value
+        user_id: userId,
         type: selectedType,
         origin: origin || 'Anonymous', 
         about: about || 'The World',
         text: text, 
         votes: 0
-      }).select();
+      });
 
       if (error) throw error;
       
-      // Clear inputs and show success
       document.getElementById('cardText').value = '';
       document.getElementById('originInput').value = '';
       document.getElementById('aboutInput').value = '';
-      showToast('card dropped ✧');
+      showToast('card dropped ?');
       showPage('wildcards', document.querySelectorAll('.nav-links a')[1]);
       renderCards('all');
     } catch(e) {
@@ -443,7 +437,7 @@ async function submitCard() {
       updateVoteUI(id, newVotes);
     } catch(e) {
       voted.push(id); saveVoted();
-      showToast('related ✓');
+      showToast('related ?');
     }
   }
 
@@ -453,10 +447,10 @@ async function submitCard() {
     const btn = document.getElementById('rel_'+id);
     if (bar) bar.style.width = Math.min((votes/1500)*100,100)+'%';
     if (cnt) cnt.innerHTML = `<b>${votes}</b> people related`;
-    if (btn) { btn.classList.add('voted'); btn.textContent = 'related ✓'; }
+    if (btn) { btn.classList.add('voted'); btn.textContent = 'related ?'; }
   }
 
-  // RENDER CARDS (With Pinned Logic Restored)
+  // RENDER CARDS
   async function renderCards(filter) {
     currentFilter = filter;
     const grid = document.getElementById('cardsGrid');
@@ -472,7 +466,6 @@ async function submitCard() {
         return;
       }
 
-      // Restore the Pinned & Sorting Logic
       all.sort((a, b) => {
         if (a.is_pinned && !b.is_pinned) return -1;
         if (!a.is_pinned && b.is_pinned) return 1;
@@ -485,13 +478,13 @@ async function submitCard() {
         const isV = voted.includes(c.id);
         return `<div class="wc-card" style="animation-delay:${i*0.04}s">
           <div class="wc-card-top"><span class="wc-user-id">${c.user_id || 'GEN Z ???'}</span>${badges[c.type] || badges.freeform}</div>
-          <div class="wc-route">${c.origin} → ${c.about}</div>
+          <div class="wc-route">${c.origin} ? ${c.about}</div>
           <div class="wc-text">${esc(c.text)}</div>
           <div class="wc-poll">
             <div class="poll-bar-bg"><div class="poll-bar-fill" id="bar_${c.id}" style="width:${pct}%"></div></div>
             <div class="poll-bottom">
               <div class="poll-count" id="cnt_${c.id}"><b>${c.votes}</b> people related</div>
-              <button class="relate-btn ${isV?'voted':''}" onclick="vote('${c.id}')">${isV?'related ✓':'i relate'}</button>
+              <button class="relate-btn ${isV?'voted':''}" onclick="vote('${c.id}')">${isV?'related ?':'i relate'}</button>
             </div>
           </div>
         </div>`;
@@ -523,7 +516,7 @@ async function submitCard() {
     setTimeout(() => t.classList.remove('show'), 3000);
   }
 
-async function initUser() {
+  async function initUser() {
     try {
       let deviceKey = localStorage.getItem('twc_device_key');
       if (!deviceKey) {
@@ -531,40 +524,29 @@ async function initUser() {
         localStorage.setItem('twc_device_key', deviceKey);
       }
       
-      const { data: existing, error: fetchError } = await sb.from('users')
-        .select('gen_z_number')
-        .eq('device_key', deviceKey)
-        .single();
+      const { data: existing } = await sb.from('users').select('gen_z_number').eq('device_key', deviceKey).single();
       
       if (existing) { 
         userId = 'GEN Z ' + existing.gen_z_number; 
       } else {
-        const { data: newUser, error: insertError } = await sb.from('users')
+        const { data: newUser } = await sb.from('users')
           .insert({ device_key: deviceKey })
           .select('gen_z_number')
           .single();
         
-        if (newUser) {
-          userId = 'GEN Z ' + newUser.gen_z_number;
-        }
+        if (newUser) userId = 'GEN Z ' + newUser.gen_z_number;
       }
       
-      if (userId) {
-        localStorage.setItem('twc_uid', userId);
-        console.log("Identity established:", userId);
-      }
-    } catch(e) { 
-      console.error("Identity Error:", e);
-    }
+      if (userId) localStorage.setItem('twc_uid', userId);
+    } catch(e) { console.error("Identity Error:", e); }
   }
 
-  // Final execution trigger
   async function startApp() {
-    await initUser(); // This forces the app to get the ID first
+    await initUser();
     renderCards('all');
   }
 
-  startApp(); // <--- ADD THIS LINE HERE
+  startApp();
 </script>
 </body>
 </html>
