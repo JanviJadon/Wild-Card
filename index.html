@@ -329,7 +329,7 @@
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtldGJlYWt3dndua2V6a21lbGZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNTMxODcsImV4cCI6MjA5MDYyOTE4N30.5fxnIWomxQiEVj4attkcxPLceGiOsVrcyfxOhRH-Bbk';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   
-  let userId = localStorage.getItem('twc_uid') || null;
+  let userId = null; // Start as null to force a wait
   let voted = JSON.parse(localStorage.getItem('twc_voted') || '[]');
   let selectedType = 'stereotype';
   let currentFilter = 'all';
@@ -343,6 +343,7 @@
 
   function saveVoted() { localStorage.setItem('twc_voted', JSON.stringify(voted)); }
 
+  // Chips & Filters
   document.querySelectorAll('.chip').forEach(c => {
     c.addEventListener('click', () => {
       document.querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
@@ -359,9 +360,11 @@
     });
   });
 
+  // Submit Logic
   async function submitCard() {
-    if (!userId || userId === "null") {
-        showToast('establishing your identity... wait 1 sec');
+    // If userId isn't ready, try to get it again
+    if (!userId) {
+        showToast('syncing with the grid... try in 2 seconds');
         await initUser();
         return;
     }
@@ -391,11 +394,11 @@
       showToast('card dropped ✨');
       showPage('wildcards', document.querySelectorAll('.nav-links a')[1]);
     } catch(e) {
-      console.error(e);
       showToast('something went wrong...');
     }
   }
 
+  // Voting Logic
   async function vote(id) {
     if (voted.includes(id)) { showToast('you already related'); return; }
     try {
@@ -417,6 +420,7 @@
     if (btn) { btn.classList.add('voted'); btn.textContent = 'related ?'; }
   }
 
+  // Card Rendering
   async function renderCards(filter) {
     currentFilter = filter;
     const grid = document.getElementById('cardsGrid');
@@ -427,11 +431,7 @@
       
       const { data: all, error } = await query;
       if (error) throw error;
-      if (!all || all.length === 0) {
-        grid.innerHTML = '<div class="empty">no cards here yet — be the first.</div>';
-        return;
-      }
-
+      
       all.sort((a, b) => {
         if (a.is_pinned && !b.is_pinned) return -1;
         if (!a.is_pinned && b.is_pinned) return 1;
@@ -439,7 +439,7 @@
         return new Date(b.created_at) - new Date(a.created_at);
       });
 
-      grid.innerHTML = all.map((c, i) => {
+      grid.innerHTML = all.length ? all.map((c, i) => {
         const pct = Math.min((c.votes/1500)*100, 100);
         const isV = voted.includes(c.id);
         return `<div class="wc-card" style="animation-delay:${i*0.04}s">
@@ -454,8 +454,8 @@
             </div>
           </div>
         </div>`;
-      }).join('');
-    } catch(e) { console.error(e); grid.innerHTML = '<div class="empty">error loading cards.</div>'; }
+      }).join('') : '<div class="empty">no cards here yet.</div>';
+    } catch(e) { grid.innerHTML = '<div class="empty">error loading cards.</div>'; }
   }
 
   function esc(t){ return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -483,6 +483,7 @@
     setTimeout(() => t.classList.remove('show'), 3000);
   }
 
+  // IDENTITY FIX: This ensures we get the REAL number from the DB
   async function initUser() {
     try {
       let deviceKey = localStorage.getItem('twc_device_key');
@@ -490,19 +491,33 @@
         deviceKey = 'dk_' + Math.random().toString(36).substr(2,9) + Date.now().toString(36);
         localStorage.setItem('twc_device_key', deviceKey);
       }
-      const { data: existing } = await sb.from('users').select('gen_z_number').eq('device_key', deviceKey).single();
+
+      // Check for existing user
+      const { data: existing } = await sb.from('users')
+        .select('gen_z_number')
+        .eq('device_key', deviceKey)
+        .single();
+
       if (existing) { 
         userId = 'GEN Z ' + existing.gen_z_number; 
       } else {
-        const { data: newUser } = await sb.from('users').insert({ device_key: deviceKey }).select('gen_z_number').single();
+        // Create new user and get the assigned serial number
+        const { data: newUser } = await sb.from('users')
+          .insert({ device_key: deviceKey })
+          .select('gen_z_number')
+          .single();
         if (newUser) userId = 'GEN Z ' + newUser.gen_z_number;
       }
-      if (userId) localStorage.setItem('twc_uid', userId);
+      
+      if (userId) {
+        localStorage.setItem('twc_uid', userId);
+        console.log("ID Active:", userId);
+      }
     } catch(e) { console.error("Identity Error:", e); }
   }
 
   async function startApp() {
-    await initUser();
+    await initUser(); // Wait for user ID before rendering
     renderCards('all');
   }
 
