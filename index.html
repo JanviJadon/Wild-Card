@@ -395,7 +395,6 @@ async function submitCard() {
 
     // THE VIBE-FIX: If userId is still broken or null, fix it right now!
     if (!userId || userId === "null" || userId.includes('undefined')) {
-       userId = 'GEN Z ' + Math.floor(1000 + Math.random() * 9000);
        localStorage.setItem('twc_uid', userId);
     }
 
@@ -523,25 +522,30 @@ async function initUser() {
         deviceKey = 'dk_' + Math.random().toString(36).substr(2,9) + Date.now().toString(36);
         localStorage.setItem('twc_device_key', deviceKey);
       }
+      
       const { data: existing } = await sb.from('users').select('gen_z_number').eq('device_key', deviceKey).single();
       
       if (existing) { 
         userId = 'GEN Z ' + existing.gen_z_number; 
       } else {
-        const { data: newUser } = await sb.from('users')
+        const { data: newUser, error } = await sb.from('users')
           .insert({ device_key: deviceKey })
           .select('gen_z_number')
           .single();
         
-        if (newUser && newUser.gen_z_number) { 
-          userId = 'GEN Z ' + newUser.gen_z_number; 
+        if (newUser) {
+          userId = 'GEN Z ' + newUser.gen_z_number;
         }
-      } // <--- Added this to close the 'else'
+      }
       
-      localStorage.setItem('twc_uid', userId);
+      // Save the REAL sequential ID
+      if (userId && userId !== "null") {
+        localStorage.setItem('twc_uid', userId);
+      }
     } catch(e) { 
-      console.error(e); 
-    } // <--- Added this to close the 'try'
+      console.error("Database error:", e); 
+      userId = "GEN Z Guest"; // Better fallback than a random number
+    }
   }
 async function startApp() {
   await initUser();
