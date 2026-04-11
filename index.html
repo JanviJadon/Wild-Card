@@ -387,6 +387,14 @@ let userId = localStorage.getItem('twc_uid') || null;
 
   // SUBMIT CARD
 async function submitCard() {
+  // New safety check
+    if (!userId || userId === "null") {
+        showToast('still assigning your GEN Z number... wait 1 sec');
+        await initUser(); // Try to fetch it again
+        return;
+      }
+
+    const text = document.getElementById('cardText').value.trim();
     const text = document.getElementById('cardText').value.trim();
     const origin = document.getElementById('originInput').value.trim();
     const about = document.getElementById('aboutInput').value.trim();
@@ -523,12 +531,15 @@ async function initUser() {
         localStorage.setItem('twc_device_key', deviceKey);
       }
       
-      const { data: existing } = await sb.from('users').select('gen_z_number').eq('device_key', deviceKey).single();
+      const { data: existing, error: fetchError } = await sb.from('users')
+        .select('gen_z_number')
+        .eq('device_key', deviceKey)
+        .single();
       
       if (existing) { 
         userId = 'GEN Z ' + existing.gen_z_number; 
       } else {
-        const { data: newUser, error } = await sb.from('users')
+        const { data: newUser, error: insertError } = await sb.from('users')
           .insert({ device_key: deviceKey })
           .select('gen_z_number')
           .single();
@@ -538,21 +549,22 @@ async function initUser() {
         }
       }
       
-      // Save the REAL sequential ID
-      if (userId && userId !== "null") {
+      if (userId) {
         localStorage.setItem('twc_uid', userId);
+        console.log("Identity established:", userId);
       }
     } catch(e) { 
-      console.error("Database error:", e); 
-      userId = "GEN Z Guest"; // Better fallback than a random number
+      console.error("Identity Error:", e);
     }
   }
-async function startApp() {
-  await initUser();
-  renderCards('all');
-}
 
-startApp(); // <--- ADD THIS LINE HERE
+  // Final execution trigger
+  async function startApp() {
+    await initUser(); // This forces the app to get the ID first
+    renderCards('all');
+  }
+
+  startApp(); // <--- ADD THIS LINE HERE
 </script>
 </body>
 </html>
