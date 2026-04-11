@@ -1,17 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DJML4HN9FB"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-DJML4HN9FB');
-</script>
-  <link rel="canonical" href="https://thewildcards.netlify.app/" />
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DJML4HN9FB"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DJML4HN9FB');
+  </script>
+  <link rel="canonical" href="https://thewildcards.netlify.app/" />
   <title>The Wild Cards .We.hear.you.</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -27,7 +26,6 @@
     }
     *{margin:0;padding:0;box-sizing:border-box}
     html{scroll-behavior:smooth}
-
     body{
       font-family:'DM Sans',sans-serif;
       background:var(--bg);
@@ -40,7 +38,6 @@
       min-height:100vh;
       overflow-x:hidden;
     }
-
     body::before{
       content:'';position:fixed;inset:0;
       background:rgba(196,168,130,0.18);
@@ -51,11 +48,6 @@
       background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.09'/%3E%3C/svg%3E");
       pointer-events:none;z-index:0;opacity:0.4;
     }
-
-    .skyline-bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
-    .skyline-bg svg{position:absolute;bottom:0;width:100%;min-width:900px;opacity:0.3}
-
-    /* NAV */
     nav{
       position:fixed;top:0;left:0;right:0;z-index:100;
       display:flex;justify-content:space-between;align-items:center;
@@ -80,12 +72,8 @@
       transition:all 0.2s;cursor:pointer;white-space:nowrap;
     }
     .nav-links a:hover,.nav-links a.active{color:var(--text);background:rgba(100,70,30,0.15)}
-
-    /* PAGES */
     .page{display:none;position:relative;z-index:1;min-height:100vh;padding:5.5rem 1.5rem 4rem}
     .page.active{display:flex;flex-direction:column}
-
-    /* HOME */
     #page-home{justify-content:center;align-items:flex-start;max-width:860px;margin:0 auto;width:100%}
     .home-question{
       font-family:'Playfair Display',serif;
@@ -124,7 +112,6 @@
     }
     .input-mini input::placeholder{color:var(--text-muted)}
     .input-mini input:focus{border-color:var(--accent)}
-
     .type-chips{display:flex;gap:0.4rem;flex-wrap:wrap;margin-top:0.9rem}
     .chip{
       font-family:'DM Sans',sans-serif;font-size:0.72rem;
@@ -135,7 +122,6 @@
       cursor:pointer;transition:all 0.2s;font-weight:500;
     }
     .chip.active,.chip:hover{background:rgba(100,70,30,0.25);color:var(--text);border-color:var(--accent)}
-
     .globe-submit{
       position:absolute;bottom:1.2rem;right:1.5rem;
       display:flex;flex-direction:column;align-items:center;gap:0.25rem;
@@ -144,13 +130,10 @@
     .globe-submit:hover{transform:scale(1.08)}
     .globe-submit svg{width:56px;height:56px;filter:drop-shadow(0 3px 8px rgba(80,50,10,0.2))}
     .globe-submit span{font-family:'DM Sans',sans-serif;font-size:0.6rem;color:var(--text-mid);letter-spacing:0.08em;text-transform:uppercase;font-weight:500}
-
-    /* WILDCARDS */
     #page-wildcards{max-width:960px;margin:0 auto;width:100%}
     .wc-header{margin-bottom:1.2rem;animation:fadeUp 0.6s ease both}
     .wc-header h2{font-family:'Playfair Display',serif;font-size:clamp(1.6rem,4vw,2.5rem);color:var(--text);margin-bottom:0.3rem}
     .wc-header p{font-family:'Lora',serif;font-style:italic;color:var(--text-mid);font-size:0.9rem}
-
     .filter-row{display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:1.5rem;animation:fadeUp 0.6s 0.1s ease both}
     .filter-chip{
       font-family:'DM Sans',sans-serif;font-size:0.72rem;font-weight:500;
@@ -161,7 +144,6 @@
       cursor:pointer;transition:all 0.2s;
     }
     .filter-chip.active,.filter-chip:hover{background:rgba(100,70,30,0.25);color:var(--text);border-color:var(--accent)}
-
     .sort-row{
       display:flex;align-items:center;gap:0.5rem;
       margin-bottom:1.2rem;
@@ -174,7 +156,6 @@
       color:var(--text-mid);cursor:pointer;transition:all 0.2s;
     }
     .sort-btn.active,.sort-btn:hover{background:rgba(100,70,30,0.22);color:var(--text);border-color:var(--accent)}
-
     .cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem}
     .wc-card{
       background:var(--card-bg);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
@@ -203,8 +184,6 @@
       color:var(--text-mid);cursor:pointer;transition:all 0.2s;
     }
     .relate-btn:hover,.relate-btn.voted{background:rgba(100,70,30,0.18);color:var(--text);border-color:var(--accent)}
-
-    /* ABOUT */
     #page-about{justify-content:flex-start;max-width:680px;margin:0 auto;width:100%}
     .about-card{
       background:var(--card-bg);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
@@ -225,10 +204,8 @@
       flex-shrink:0;margin-top:0.1rem;
     }
     .about-step p{margin:0;font-size:0.86rem;color:var(--text-mid)}
-
     .loading{grid-column:1/-1;text-align:center;padding:2.5rem;font-family:'Lora',serif;font-style:italic;color:var(--text-mid);font-size:0.9rem}
     .empty{grid-column:1/-1;text-align:center;padding:3rem;font-family:'Lora',serif;font-style:italic;color:var(--text-mid);font-size:0.92rem}
-
     .toast{
       position:fixed;bottom:1.5rem;left:50%;
       transform:translateX(-50%) translateY(80px);
@@ -240,9 +217,7 @@
       max-width:90vw;text-align:center;
     }
     .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
-
     @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-
     @media(max-width:768px){
       nav{padding:0.8rem 1rem}
       .nav-title{font-size:1.15rem}
@@ -263,7 +238,6 @@
   </style>
 </head>
 <body>
-
 <nav>
   <div class="nav-brand">
     <div class="nav-title">The Wild Cards</div>
@@ -282,9 +256,9 @@
     <span class="input-label">say it here :</span>
     <textarea id="cardText" placeholder="a stereotype you've heard, something that impressed you, or just... anything." maxlength="400"></textarea>
     <div class="type-chips">
-      <div class="chip active" data-type="stereotype"> ?? stereotype i've heard</div>
-      <div class="chip" data-type="impressive"> ? what impressed me</div>
-      <div class="chip" data-type="freeform"> ?? just a wildcard</div>
+      <div class="chip active" data-type="stereotype">💭 stereotype i've heard</div>
+      <div class="chip" data-type="impressive">✨ what impressed me</div>
+      <div class="chip" data-type="freeform">🃏 just a wildcard</div>
     </div>
     <div class="input-row">
       <div class="input-mini">
@@ -369,7 +343,6 @@
 
   function saveVoted() { localStorage.setItem('twc_voted', JSON.stringify(voted)); }
 
-  // CHIP SELECTION
   document.querySelectorAll('.chip').forEach(c => {
     c.addEventListener('click', () => {
       document.querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
@@ -378,7 +351,6 @@
     });
   });
 
-  // FILTER CHIP SELECTION (Fixed Category Sort)
   document.querySelectorAll('.filter-chip').forEach(f => {
     f.addEventListener('click', () => {
       document.querySelectorAll('.filter-chip').forEach(x => x.classList.remove('active'));
@@ -387,15 +359,15 @@
     });
   });
 
-  // SUBMIT CARD
   async function submitCard() {
     if (!userId || userId === "null") {
-        showToast('establishing your gen z identity... try again in a sec');
+        showToast('establishing your identity... wait 1 sec');
         await initUser();
         return;
     }
 
-    const text = document.getElementById('cardText').value.trim();
+    const textInput = document.getElementById('cardText');
+    const text = textInput.value.trim();
     const origin = document.getElementById('originInput').value.trim();
     const about = document.getElementById('aboutInput').value.trim();
     
@@ -413,21 +385,19 @@
 
       if (error) throw error;
       
-      document.getElementById('cardText').value = '';
+      textInput.value = '';
       document.getElementById('originInput').value = '';
       document.getElementById('aboutInput').value = '';
-      showToast('card dropped ?');
+      showToast('card dropped ✨');
       showPage('wildcards', document.querySelectorAll('.nav-links a')[1]);
-      renderCards('all');
     } catch(e) {
       console.error(e);
       showToast('something went wrong...');
     }
   }
 
-  // VOTE / RELATE
   async function vote(id) {
-    if (voted.includes(id)) { showToast('you already related to this one'); return; }
+    if (voted.includes(id)) { showToast('you already related'); return; }
     try {
       const { data: card } = await sb.from('cards').select('votes').eq('id', id).single();
       if (!card) return;
@@ -435,10 +405,7 @@
       await sb.from('cards').update({ votes: newVotes }).eq('id', id);
       voted.push(id); saveVoted();
       updateVoteUI(id, newVotes);
-    } catch(e) {
-      voted.push(id); saveVoted();
-      showToast('related ?');
-    }
+    } catch(e) { console.error(e); }
   }
 
   function updateVoteUI(id, votes) {
@@ -450,7 +417,6 @@
     if (btn) { btn.classList.add('voted'); btn.textContent = 'related ?'; }
   }
 
-  // RENDER CARDS
   async function renderCards(filter) {
     currentFilter = filter;
     const grid = document.getElementById('cardsGrid');
@@ -478,13 +444,13 @@
         const isV = voted.includes(c.id);
         return `<div class="wc-card" style="animation-delay:${i*0.04}s">
           <div class="wc-card-top"><span class="wc-user-id">${c.user_id || 'GEN Z ???'}</span>${badges[c.type] || badges.freeform}</div>
-          <div class="wc-route">${c.origin} ? ${c.about}</div>
+          <div class="wc-route">${c.origin} ➔ ${c.about}</div>
           <div class="wc-text">${esc(c.text)}</div>
           <div class="wc-poll">
             <div class="poll-bar-bg"><div class="poll-bar-fill" id="bar_${c.id}" style="width:${pct}%"></div></div>
             <div class="poll-bottom">
               <div class="poll-count" id="cnt_${c.id}"><b>${c.votes}</b> people related</div>
-              <button class="relate-btn ${isV?'voted':''}" onclick="vote('${c.id}')">${isV?'related ?':'i relate'}</button>
+              <button class="relate-btn ${isV?'voted':''}" id="rel_${c.id}" onclick="vote('${c.id}')">${isV?'related ?':'i relate'}</button>
             </div>
           </div>
         </div>`;
@@ -504,7 +470,8 @@
   function showPage(name, el) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
-    document.getElementById('page-'+name).classList.add('active');
+    const target = document.getElementById('page-'+name);
+    if(target) target.classList.add('active');
     if (el) el.classList.add('active');
     if (name === 'wildcards') renderCards(currentFilter);
     window.scrollTo(0,0);
@@ -523,20 +490,13 @@
         deviceKey = 'dk_' + Math.random().toString(36).substr(2,9) + Date.now().toString(36);
         localStorage.setItem('twc_device_key', deviceKey);
       }
-      
       const { data: existing } = await sb.from('users').select('gen_z_number').eq('device_key', deviceKey).single();
-      
       if (existing) { 
         userId = 'GEN Z ' + existing.gen_z_number; 
       } else {
-        const { data: newUser } = await sb.from('users')
-          .insert({ device_key: deviceKey })
-          .select('gen_z_number')
-          .single();
-        
+        const { data: newUser } = await sb.from('users').insert({ device_key: deviceKey }).select('gen_z_number').single();
         if (newUser) userId = 'GEN Z ' + newUser.gen_z_number;
       }
-      
       if (userId) localStorage.setItem('twc_uid', userId);
     } catch(e) { console.error("Identity Error:", e); }
   }
