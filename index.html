@@ -15,6 +15,27 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
+  /* Base style for all chips */
+.chip {
+    padding: 8px 16px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    font-size: 0.9rem;
+}
+
+/* The "Pop" highlight when selected */
+.chip.active {
+    background: #7a5c30; /* Your dark gold/brown theme color */
+    color: #f4ecd8;    /* Your parchment color */
+    border-color: #7a5c30;
+    box-shadow: 0 4px 12px rgba(122, 92, 48, 0.2);
+}
     :root {
       --bg:#c4a882;
       --card-bg:rgba(222,200,168,0.88);
@@ -571,7 +592,28 @@ if(globe) {
     const t = document.getElementById('toast');
     if(t) { t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
   }
+// This variable keeps track of which category is selected
+let selectedType = 'stereotype'; 
 
+function selectType(element) {
+    // 1. Remove the 'active' class from whichever chip currently has it
+    document.querySelectorAll('.chip').forEach(chip => {
+        chip.classList.remove('active');
+    });
+
+    // 2. Add the 'active' class to the chip you just clicked
+    element.classList.add('active');
+
+    // 3. Update our variable with the new data-type (stereotype, impressive, or freeform)
+    selectedType = element.getAttribute('data-type');
+    
+    // 4. (Optional) Small visual pop effect
+    element.style.transform = 'scale(0.95)';
+    setTimeout(() => {
+        element.style.transform = 'scale(1)';
+    }, 100);
+}
+  
   async function startApp() {
     await initUser();
     renderCards('all');
