@@ -26,28 +26,40 @@
     }
     *{margin:0;padding:0;box-sizing:border-box}
     html{scroll-behavior:smooth}
+    
     body{
       font-family:'DM Sans',sans-serif;
       background:var(--bg);
-      background-image:url('images/background2.png');
-      background-size:cover;
-      background-position:center center;
-      background-attachment:fixed;
-      background-repeat:no-repeat;
       color:var(--text);
       min-height:100vh;
       overflow-x:hidden;
     }
+
+    /* Surgical Fix: High-Performance Fixed Background */
+    .bg-fixed-layer {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: -2;
+      background-image:url('images/background2.png');
+      background-size:cover;
+      background-position:center;
+      background-repeat:no-repeat;
+      transform: translateZ(0); /* Prevents mobile jitter */
+      -webkit-transform: translateZ(0);
+    }
+
     body::before{
       content:'';position:fixed;inset:0;
       background:rgba(196,168,130,0.18);
-      pointer-events:none;z-index:0;
+      pointer-events:none;z-index:-1;
     }
     body::after{
       content:'';position:fixed;inset:0;
       background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.09'/%3E%3C/svg%3E");
-      pointer-events:none;z-index:0;opacity:0.4;
+      pointer-events:none;z-index:-1;opacity:0.4;
     }
+    
     nav{
       position:fixed;top:0;left:0;right:0;z-index:100;
       display:flex;justify-content:space-between;align-items:center;
@@ -72,9 +84,11 @@
       transition:all 0.2s;cursor:pointer;white-space:nowrap;
     }
     .nav-links a:hover,.nav-links a.active{color:var(--text);background:rgba(100,70,30,0.15)}
+    
     .page{display:none;position:relative;z-index:1;min-height:100vh;padding:5.5rem 1.5rem 4rem}
     .page.active{display:flex;flex-direction:column}
     #page-home{justify-content:center;align-items:flex-start;max-width:860px;margin:0 auto;width:100%}
+    
     .home-question{
       font-family:'Playfair Display',serif;
       font-size:clamp(1.4rem,3.5vw,2.2rem);
@@ -112,6 +126,8 @@
     }
     .input-mini input::placeholder{color:var(--text-muted)}
     .input-mini input:focus{border-color:var(--accent)}
+
+    /* Chip Animations */
     .type-chips{display:flex;gap:0.4rem;flex-wrap:wrap;margin-top:0.9rem}
     .chip{
       font-family:'DM Sans',sans-serif;font-size:0.72rem;
@@ -119,21 +135,43 @@
       border:1px solid var(--border);
       background:rgba(160,120,70,0.15);
       color:var(--text-mid);
-      cursor:pointer;transition:all 0.2s;font-weight:500;
+      cursor:pointer;transition:all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      font-weight:500;
     }
-    .chip.active,.chip:hover{background:rgba(100,70,30,0.25);color:var(--text);border-color:var(--accent)}
+    .chip.active,.chip:hover{
+      background:rgba(100,70,30,0.25);color:var(--text);border-color:var(--accent);
+      transform: translateY(-3px) scale(1.05);
+    }
+    .chip:active { transform: scale(0.95); }
+
     .globe-submit{
       position:absolute;bottom:1.2rem;right:1.5rem;
       display:flex;flex-direction:column;align-items:center;gap:0.25rem;
       cursor:pointer;transition:transform 0.2s;
     }
     .globe-submit:hover{transform:scale(1.08)}
-    .globe-submit svg{width:56px;height:56px;filter:drop-shadow(0 3px 8px rgba(80,50,10,0.2))}
+    
+    /* Horizontal Constant Spin */
+    .globe-submit svg{
+      width:56px;height:56px;
+      filter:drop-shadow(0 3px 8px rgba(80,50,10,0.2));
+      animation: globeRotateHorizontal 12s linear infinite;
+    }
+
+    @keyframes globeRotateHorizontal {
+      from { transform: rotateY(0deg); }
+      to { transform: rotateY(360deg); }
+    }
+    
+    .spinning-fast { animation: globeRotateHorizontal 0.8s ease-in-out !important; }
+
     .globe-submit span{font-family:'DM Sans',sans-serif;font-size:0.6rem;color:var(--text-mid);letter-spacing:0.08em;text-transform:uppercase;font-weight:500}
+    
     #page-wildcards{max-width:960px;margin:0 auto;width:100%}
     .wc-header{margin-bottom:1.2rem;animation:fadeUp 0.6s ease both}
     .wc-header h2{font-family:'Playfair Display',serif;font-size:clamp(1.6rem,4vw,2.5rem);color:var(--text);margin-bottom:0.3rem}
     .wc-header p{font-family:'Lora',serif;font-style:italic;color:var(--text-mid);font-size:0.9rem}
+    
     .filter-row{display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:1.5rem;animation:fadeUp 0.6s 0.1s ease both}
     .filter-chip{
       font-family:'DM Sans',sans-serif;font-size:0.72rem;font-weight:500;
@@ -141,9 +179,13 @@
       border:1px solid var(--border);
       background:rgba(160,120,70,0.15);
       color:var(--text-mid);
-      cursor:pointer;transition:all 0.2s;
+      cursor:pointer;transition:all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
-    .filter-chip.active,.filter-chip:hover{background:rgba(100,70,30,0.25);color:var(--text);border-color:var(--accent)}
+    .filter-chip.active,.filter-chip:hover{
+        background:rgba(100,70,30,0.25);color:var(--text);border-color:var(--accent);
+        transform: translateY(-3px) scale(1.05);
+    }
+    
     .sort-row{
       display:flex;align-items:center;gap:0.5rem;
       margin-bottom:1.2rem;
@@ -153,9 +195,14 @@
       font-family:'DM Sans',sans-serif;font-size:0.7rem;font-weight:500;
       padding:0.28rem 0.75rem;border-radius:999px;
       border:1px solid var(--border);background:rgba(160,120,70,0.15);
-      color:var(--text-mid);cursor:pointer;transition:all 0.2s;
+      color:var(--text-mid);cursor:pointer;transition:all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
-    .sort-btn.active,.sort-btn:hover{background:rgba(100,70,30,0.22);color:var(--text);border-color:var(--accent)}
+    .sort-btn.active,.sort-btn:hover{
+        background:rgba(100,70,30,0.22);color:var(--text);border-color:var(--accent);
+        transform: translateY(-3px) scale(1.05);
+    }
+    .sort-btn:active { transform: scale(0.95); }
+    
     .cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem}
     .wc-card{
       background:var(--card-bg);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
@@ -169,8 +216,10 @@
     .badge-s{background:rgba(180,80,50,0.12);color:#7a2a0a;border:1px solid rgba(180,80,50,0.25)}
     .badge-i{background:rgba(60,120,60,0.12);color:#1d5b1d;border:1px solid rgba(60,120,60,0.25)}
     .badge-f{background:rgba(80,60,140,0.1);color:#3a2870;border:1px solid rgba(80,60,140,0.2)}
+    
     .wc-route{font-family:'DM Sans',sans-serif;font-size:0.68rem;color:var(--text-muted);margin-bottom:0.6rem}
     .wc-text{font-family:'Lora',serif;font-size:0.88rem;line-height:1.65;color:var(--text-mid);margin-bottom:1rem}
+    
     .wc-poll{border-top:1px solid var(--border);padding-top:0.9rem}
     .poll-bar-bg{background:rgba(100,70,30,0.12);border-radius:999px;height:4px;margin-bottom:0.5rem;overflow:hidden}
     .poll-bar-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#8b6030,#c49a50);transition:width 0.9s cubic-bezier(0.16,1,0.3,1)}
@@ -184,6 +233,7 @@
       color:var(--text-mid);cursor:pointer;transition:all 0.2s;
     }
     .relate-btn:hover,.relate-btn.voted{background:rgba(100,70,30,0.18);color:var(--text);border-color:var(--accent)}
+    
     #page-about{justify-content:flex-start;max-width:680px;margin:0 auto;width:100%}
     .about-card{
       background:var(--card-bg);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
@@ -194,6 +244,7 @@
     .about-card .tagline{font-family:'Lora',serif;font-style:italic;color:var(--text-mid);margin-bottom:1.5rem;font-size:0.95rem}
     .about-card p{font-family:'Lora',serif;font-size:0.92rem;line-height:1.8;color:var(--text-mid);margin-bottom:1rem}
     .about-card p strong{color:var(--text);font-weight:600}
+    
     .about-steps{margin-top:1.2rem;display:flex;flex-direction:column;gap:0.9rem}
     .about-step{display:flex;gap:0.9rem;align-items:flex-start}
     .step-dot{
@@ -204,8 +255,10 @@
       flex-shrink:0;margin-top:0.1rem;
     }
     .about-step p{margin:0;font-size:0.86rem;color:var(--text-mid)}
+    
     .loading{grid-column:1/-1;text-align:center;padding:2.5rem;font-family:'Lora',serif;font-style:italic;color:var(--text-mid);font-size:0.9rem}
     .empty{grid-column:1/-1;text-align:center;padding:3rem;font-family:'Lora',serif;font-style:italic;color:var(--text-mid);font-size:0.92rem}
+    
     .toast{
       position:fixed;bottom:1.5rem;left:50%;
       transform:translateX(-50%) translateY(80px);
@@ -233,24 +286,18 @@
       .globe-submit svg{width:44px;height:44px}
       .about-card{padding:1.5rem}
     }
-
     @media(max-width:400px){
       .nav-links a{font-size:0.7rem;padding:0.15rem 0.4rem}
       .chip{font-size:0.65rem;padding:0.25rem 0.65rem}
     }
 
-    /* Surgical Fix: Animations moved outside media query */
-    .spinning { animation: globeRotate 0.8s ease-in-out; }
-    @keyframes globeRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     .card-press { transform: scale(0.96) !important; transition: transform 0.1s ease; }
     .card-entry { opacity: 0; transform: translateY(20px); animation: cardSlideIn 0.5s ease forwards; }
     @keyframes cardSlideIn { to { opacity: 1; transform: translateY(0); } }
-    .chip { transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-    .chip:hover { transform: translateY(-3px) scale(1.05); }
-
   </style>
 </head>
 <body>
+<div class="bg-fixed-layer"></div>
 <nav>
   <div class="nav-brand">
     <div class="nav-title">The Wild Cards</div>
@@ -356,7 +403,6 @@
 
   function saveVoted() { localStorage.setItem('twc_voted', JSON.stringify(voted)); }
 
-  // Navigation and UI
   document.querySelectorAll('.chip').forEach(c => {
     c.addEventListener('click', () => {
       document.querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
@@ -377,50 +423,31 @@
     try {
       let deviceKey = localStorage.getItem('twc_device_key');
       if (!deviceKey) return null;
-
-      const { data: existing } = await sb.from('users')
-        .select('gen_z_number')
-        .eq('device_key', deviceKey)
-        .maybeSingle();
-
+      const { data: existing } = await sb.from('users').select('gen_z_number').eq('device_key', deviceKey).maybeSingle();
       if (existing) { 
         userId = 'GEN Z ' + existing.gen_z_number;
         localStorage.setItem('twc_uid', userId);
       }
       return userId;
-    } catch(e) { 
-      console.error("Identity Error:", e);
-      return null;
-    }
+    } catch(e) { return null; }
   }
 
   async function createIdentityOnDrop() {
     try {
-      let deviceKey = localStorage.getItem('twc_device_key');
-      if (!deviceKey) {
-        deviceKey = 'dk_' + Math.random().toString(36).substr(2,9) + Date.now().toString(36);
-        localStorage.setItem('twc_device_key', deviceKey);
-      }
-      const { data: newUser, error: insertError } = await sb.from('users')
-        .insert([{ device_key: deviceKey }])
-        .select('gen_z_number')
-        .single();
+      let deviceKey = localStorage.getItem('twc_device_key') || 'dk_' + Math.random().toString(36).substr(2,9) + Date.now().toString(36);
+      localStorage.setItem('twc_device_key', deviceKey);
+      const { data: newUser, error: insertError } = await sb.from('users').insert([{ device_key: deviceKey }]).select('gen_z_number').single();
       if (insertError) throw insertError;
-      if (newUser) {
-        userId = 'GEN Z ' + newUser.gen_z_number;
-        localStorage.setItem('twc_uid', userId);
-        return userId;
-      }
+      userId = 'GEN Z ' + newUser.gen_z_number;
+      localStorage.setItem('twc_uid', userId);
+      return userId;
     } catch(e) { return null; }
   }
 
   async function submitCard() {
-    // Globe Spin
     const globe = document.querySelector('.globe-submit svg');
-    if(globe) {
-        globe.classList.add('spinning');
-        setTimeout(() => globe.classList.remove('spinning'), 800);
-    }
+    globe.classList.add('spinning-fast');
+    setTimeout(() => globe.classList.remove('spinning-fast'), 800);
 
     const textInput = document.getElementById('cardText');
     const text = textInput.value.trim();
@@ -437,12 +464,7 @@
 
     try {
       const { error } = await sb.from('cards').insert({
-        user_id: userId,
-        type: selectedType,
-        origin: origin || 'Anonymous', 
-        about: about || 'The World',
-        text: text, 
-        votes: 0
+        user_id: userId, type: selectedType, origin: origin || 'Anonymous', about: about || 'The World', text: text, votes: 0
       });
       if (error) throw error;
       textInput.value = '';
@@ -454,17 +476,13 @@
   }
 
   async function vote(id) {
-    // Card Press
     const cardElement = document.getElementById(`rel_${id}`).closest('.wc-card');
-    if (cardElement) {
-        cardElement.classList.add('card-press');
-        setTimeout(() => cardElement.classList.remove('card-press'), 150);
-    }
+    cardElement.classList.add('card-press');
+    setTimeout(() => cardElement.classList.remove('card-press'), 150);
 
     if (voted.includes(id)) { showToast('you already related'); return; }
     try {
       const { data: card } = await sb.from('cards').select('votes').eq('id', id).single();
-      if (!card) return;
       const newVotes = (card.votes || 0) + 1;
       await sb.from('cards').update({ votes: newVotes }).eq('id', id);
       voted.push(id); saveVoted();
@@ -488,8 +506,7 @@
     try {
       let query = sb.from('cards').select('*');
       if (filter !== 'all') query = query.eq('type', filter);
-      const { data: all, error } = await query;
-      if (error) throw error;
+      const { data: all } = await query;
       
       all.sort((a, b) => {
         if (a.is_pinned && !b.is_pinned) return -1;
@@ -501,7 +518,6 @@
       grid.innerHTML = all.length ? all.map((c, i) => {
         const pct = Math.min((c.votes/1500)*100, 100);
         const isV = voted.includes(c.id);
-        // String fix here: Correct backtick closing
         return `<div class="wc-card card-entry" style="animation-delay:${i*0.08}s">
           <div class="wc-card-top"><span class="wc-user-id">${c.user_id || 'GEN Z ???'}</span>${badges[c.type] || badges.freeform}</div>
           <div class="wc-route">${esc(c.origin)} ➔ ${esc(c.about)}</div>
@@ -530,8 +546,7 @@
   function showPage(name, el) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
-    const target = document.getElementById('page-'+name);
-    if(target) target.classList.add('active');
+    document.getElementById('page-'+name).classList.add('active');
     if (el) el.classList.add('active');
     if (name === 'wildcards') renderCards(currentFilter);
     window.scrollTo(0,0);
