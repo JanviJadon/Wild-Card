@@ -329,7 +329,7 @@
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtldGJlYWt3dndua2V6a21lbGZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNTMxODcsImV4cCI6MjA5MDYyOTE4N30.5fxnIWomxQiEVj4attkcxPLceGiOsVrcyfxOhRH-Bbk';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   
-  let userId = null; // Start as null to force a wait
+  let userId = null;
   let voted = JSON.parse(localStorage.getItem('twc_voted') || '[]');
   let selectedType = 'stereotype';
   let currentFilter = 'all';
@@ -343,7 +343,7 @@
 
   function saveVoted() { localStorage.setItem('twc_voted', JSON.stringify(voted)); }
 
-  // Chips & Filters
+  // UI Interactivity
   document.querySelectorAll('.chip').forEach(c => {
     c.addEventListener('click', () => {
       document.querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
@@ -360,8 +360,47 @@
     });
   });
 
-  // Submit Logic
-async function submitCard() {
+  // THE FIX: Identity Management
+  async function initUser() {
+    try {
+      let deviceKey = localStorage.getItem('twc_device_key');
+      if (!deviceKey) {
+        deviceKey = 'dk_' + Math.random().toString(36).substr(2,9) + Date.now().toString(36);
+        localStorage.setItem('twc_device_key', deviceKey);
+      }
+
+      // Check if user exists
+      const { data: existing, error: fetchError } = await sb.from('users')
+        .select('gen_z_number')
+        .eq('device_key', deviceKey)
+        .maybeSingle();
+
+      if (existing && existing.gen_z_number) { 
+        userId = 'GEN Z ' + existing.gen_z_number; 
+      } else {
+        // Create new user entry
+        const { data: newUser, error: insertError } = await sb.from('users')
+          .insert([{ device_key: deviceKey }])
+          .select('gen_z_number')
+          .single();
+          
+        if (insertError) throw insertError;
+        if (newUser) userId = 'GEN Z ' + newUser.gen_z_number;
+      }
+      
+      if (userId) {
+        localStorage.setItem('twc_uid', userId);
+        console.log("Identity established:", userId);
+      }
+    } catch(e) { 
+      console.error("Identity Phase Failed:", e);
+      // Fallback to a temporary ID so the user can still post if the DB is lagging
+      userId = localStorage.getItem('twc_uid') || 'GEN Z ...';
+    }
+  }
+
+  // THE FIX: Card Submission
+  async function submitCard() {
     const textInput = document.getElementById('cardText');
     const text = textInput.value.trim();
     
@@ -370,14 +409,10 @@ async function submitCard() {
       return; 
     }
 
-    // If userId is missing, try to fetch it one last time before giving up
-    if (!userId) {
-        showToast('establishing identity... one sec');
+    // Attempt to get ID if it's missing
+    if (!userId || userId.includes('...')) {
+        showToast('syncing identity...');
         await initUser();
-        if (!userId) {
-          showToast('Connection error. Please refresh.');
-          return;
-        }
     }
 
     const origin = document.getElementById('originInput').value.trim();
@@ -393,20 +428,24 @@ async function submitCard() {
         votes: 0
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Database Insert Error:", error);
+        throw error;
+      }
       
       textInput.value = '';
       document.getElementById('originInput').value = '';
       document.getElementById('aboutInput').value = '';
       showToast('card dropped ✨');
+      
+      // Force refresh the list
       showPage('wildcards', document.querySelectorAll('.nav-links a')[1]);
     } catch(e) {
-      console.error("Submit Error:", e);
-      showToast('failed to drop card. try again.');
+      showToast('error: check if RLS is enabled in Supabase');
     }
   }
 
-  // Voting Logic
+  // Voting and Rendering (Keep your existing logic)
   async function vote(id) {
     if (voted.includes(id)) { showToast('you already related'); return; }
     try {
@@ -425,10 +464,9 @@ async function submitCard() {
     const btn = document.getElementById('rel_'+id);
     if (bar) bar.style.width = Math.min((votes/1500)*100,100)+'%';
     if (cnt) cnt.innerHTML = `<b>${votes}</b> people related`;
-    if (btn) { btn.classList.add('voted'); btn.textContent = 'related ✔'; }
+    if (btn) { btn.classList.add('voted'); btn.textContent = 'related ?'; }
   }
 
-  // Card Rendering
   async function renderCards(filter) {
     currentFilter = filter;
     const grid = document.getElementById('cardsGrid');
@@ -452,13 +490,13 @@ async function submitCard() {
         const isV = voted.includes(c.id);
         return `<div class="wc-card" style="animation-delay:${i*0.04}s">
           <div class="wc-card-top"><span class="wc-user-id">${c.user_id || 'GEN Z ???'}</span>${badges[c.type] || badges.freeform}</div>
-          <div class="wc-route">${c.origin} ➔ ${c.about}</div>
+          <div class="wc-route">${esc(c.origin)} ➔ ${esc(c.about)}</div>
           <div class="wc-text">${esc(c.text)}</div>
           <div class="wc-poll">
             <div class="poll-bar-bg"><div class="poll-bar-fill" id="bar_${c.id}" style="width:${pct}%"></div></div>
             <div class="poll-bottom">
               <div class="poll-count" id="cnt_${c.id}"><b>${c.votes}</b> people related</div>
-              <button class="relate-btn ${isV?'voted':''}" id="rel_${c.id}" onclick="vote('${c.id}')">${isV?'related ✔':'i relate'}</button>
+              <button class="relate-btn ${isV?'voted':''}" id="rel_${c.id}" onclick="vote('${c.id}')">${isV?'related ?':'i relate'}</button>
             </div>
           </div>
         </div>`;
@@ -466,7 +504,7 @@ async function submitCard() {
     } catch(e) { grid.innerHTML = '<div class="empty">error loading cards.</div>'; }
   }
 
-  function esc(t){ return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function esc(t){ return t ? t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''; }
 
   function setSort(sort, el) {
     currentSort = sort;
@@ -491,44 +529,8 @@ async function submitCard() {
     setTimeout(() => t.classList.remove('show'), 3000);
   }
 
-  // IDENTITY FIX: This ensures we get the REAL number from the DB
-async function initUser() {
-    try {
-      let deviceKey = localStorage.getItem('twc_device_key');
-      if (!deviceKey) {
-        deviceKey = 'dk_' + Math.random().toString(36).substr(2,9) + Date.now().toString(36);
-        localStorage.setItem('twc_device_key', deviceKey);
-      }
-
-      // 1. Try to find existing user
-      const { data: existing, error: fetchError } = await sb.from('users')
-        .select('gen_z_number')
-        .eq('device_key', deviceKey)
-        .maybeSingle(); // maybeSingle is safer than .single()
-
-      if (existing) { 
-        userId = 'GEN Z ' + existing.gen_z_number; 
-      } else {
-        // 2. If not found, create new user
-        const { data: newUser, error: insertError } = await sb.from('users')
-          .insert([{ device_key: deviceKey }])
-          .select('gen_z_number')
-          .single();
-          
-        if (newUser) userId = 'GEN Z ' + newUser.gen_z_number;
-      }
-      
-      if (userId) {
-        localStorage.setItem('twc_uid', userId);
-        console.log("Identity Active:", userId);
-      }
-    } catch(e) { 
-      console.error("Identity Error:", e);
-    }
-  }
-
   async function startApp() {
-    await initUser(); // Wait for user ID before rendering
+    await initUser();
     renderCards('all');
   }
 
