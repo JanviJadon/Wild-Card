@@ -446,7 +446,11 @@ async function initUser() {
   }
   // SUBMIT: Now waits for the identity before allowing the drop
 async function submitCard() {
-    const textInput = document.getElementById('cardText');
+// Add this at the start of submitCard()
+const globe = document.querySelector('.globe-submit svg');
+globe.classList.add('spinning');
+setTimeout(() => globe.classList.remove('spinning'), 800); // Cleans up after spin
+  const textInput = document.getElementById('cardText');
     const text = textInput.value.trim();
     
     if (!text || text.length < 15) { 
@@ -490,7 +494,13 @@ async function submitCard() {
   }
 
   // Keep existing vote and render logic
-  async function vote(id) {
+function vote(id) {
+    // Vibe Code: Find the card and make it "press"
+    const cardElement = document.getElementById(`rel_${id}`).closest('.wc-card');
+    if (cardElement) {
+        cardElement.classList.add('card-press');
+        setTimeout(() => cardElement.classList.remove('card-press'), 150);
+    }
     if (voted.includes(id)) { showToast('you already related'); return; }
     try {
       const { data: card } = await sb.from('cards').select('votes').eq('id', id).single();
@@ -532,7 +542,7 @@ async function submitCard() {
       grid.innerHTML = all.length ? all.map((c, i) => {
         const pct = Math.min((c.votes/1500)*100, 100);
         const isV = voted.includes(c.id);
-        return `<div class="wc-card" style="animation-delay:${i*0.04}s">
+return `<div class="wc-card card-entry" style="animation-delay:${i*0.08}s">`
           <div class="wc-card-top"><span class="wc-user-id">${c.user_id || 'GEN Z ???'}</span>${badges[c.type] || badges.freeform}</div>
           <div class="wc-route">${esc(c.origin)} ➔ ${esc(c.about)}</div>
           <div class="wc-text">${esc(c.text)}</div>
