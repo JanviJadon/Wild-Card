@@ -15,27 +15,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-  /* Base style for all chips */
-.chip {
-    padding: 8px 16px;
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(255, 255, 255, 0.05);
-    font-size: 0.9rem;
-}
-
-/* The "Pop" highlight when selected */
-.chip.active {
-    background: #7a5c30; /* Your dark gold/brown theme color */
-    color: #f4ecd8;    /* Your parchment color */
-    border-color: #7a5c30;
-    box-shadow: 0 4px 12px rgba(122, 92, 48, 0.2);
-}
     :root {
       --bg:#c4a882;
       --card-bg:rgba(222,200,168,0.88);
@@ -47,39 +26,37 @@
     }
     *{margin:0;padding:0;box-sizing:border-box}
     html{scroll-behavior:smooth}
-body {
-  font-family: 'DM Sans', sans-serif;
-  color: var(--text);
-  min-height: 100vh;
-  margin: 0;
-  /* Remove the background image from here */
-  background: var(--bg); 
-}
+    body {
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+      margin: 0;
+      background: var(--bg); 
+    }
 
-/* New Firm Background Layer */
-.bg-fixed {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -2; /* Sits behind everything */
-  background-image: url('images/background2.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  will-change: transform; /* Helps mobile performance */
-}
-body::before{
-  content:'';position:fixed;inset:0;
-  background:rgba(196,168,130,0.18);
-  pointer-events:none;
-  z-index: -1; 
-}
+    .bg-fixed {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -2;
+      background-image: url('images/background2.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      will-change: transform;
+    }
+    body::before{
+      content:'';position:fixed;inset:0;
+      background:rgba(196,168,130,0.18);
+      pointer-events:none;
+      z-index: -1; 
+    }
     body::after{
       content:'';position:fixed;inset:0;
       background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.09'/%3E%3C/svg%3E");
-      pointer-events:none;z-index:0;opacity:0.4;
+      pointer-events:none;opacity:0.4;
       z-index: -1;
     }
     nav{
@@ -147,6 +124,7 @@ body::before{
     .input-mini input::placeholder{color:var(--text-muted)}
     .input-mini input:focus{border-color:var(--accent)}
     .type-chips{display:flex;gap:0.4rem;flex-wrap:wrap;margin-top:0.9rem}
+    
     .chip{
       font-family:'DM Sans',sans-serif;font-size:0.72rem;
       padding:0.3rem 0.8rem;border-radius:999px;
@@ -155,7 +133,13 @@ body::before{
       color:var(--text-mid);
       cursor:pointer;transition:all 0.2s;font-weight:500;
     }
-    .chip.active,.chip:hover{background:rgba(100,70,30,0.25);color:var(--text);border-color:var(--accent)}
+    .chip.active {
+        background: #7a5c30; 
+        color: #f4ecd8;    
+        border-color: #7a5c30;
+        box-shadow: 0 4px 12px rgba(122, 92, 48, 0.2);
+    }
+
     .globe-submit{
       position:absolute;bottom:1.2rem;right:1.5rem;
       display:flex;flex-direction:column;align-items:center;gap:0.25rem;
@@ -164,6 +148,24 @@ body::before{
     .globe-submit:hover{transform:scale(1.08)}
     .globe-submit svg{width:56px;height:56px;filter:drop-shadow(0 3px 8px rgba(80,50,10,0.2))}
     .globe-submit span{font-family:'DM Sans',sans-serif;font-size:0.6rem;color:var(--text-mid);letter-spacing:0.08em;text-transform:uppercase;font-weight:500}
+    
+    .globe-spinning-slow {
+        animation: globeRotateHorizontal 12s linear infinite;
+        transform-style: preserve-3d;
+        display: block;
+    }
+    @keyframes globeRotateHorizontal {
+        from { transform: rotateY(0deg); }
+        to { transform: rotateY(360deg); }
+    }
+    .spinning-fast {
+        animation: globeRotateFast 0.8s ease-in-out !important;
+    }
+    @keyframes globeRotateFast {
+        from { transform: rotateY(0deg); }
+        to { transform: rotateY(360deg); }
+    }
+
     #page-wildcards{max-width:960px;margin:0 auto;width:100%}
     .wc-header{margin-bottom:1.2rem;animation:fadeUp 0.6s ease both}
     .wc-header h2{font-family:'Playfair Display',serif;font-size:clamp(1.6rem,4vw,2.5rem);color:var(--text);margin-bottom:0.3rem}
@@ -238,8 +240,6 @@ body::before{
       flex-shrink:0;margin-top:0.1rem;
     }
     .about-step p{margin:0;font-size:0.86rem;color:var(--text-mid)}
-    .loading{grid-column:1/-1;text-align:center;padding:2.5rem;font-family:'Lora',serif;font-style:italic;color:var(--text-mid);font-size:0.9rem}
-    .empty{grid-column:1/-1;text-align:center;padding:3rem;font-family:'Lora',serif;font-style:italic;color:var(--text-mid);font-size:0.92rem}
     .toast{
       position:fixed;bottom:1.5rem;left:50%;
       transform:translateX(-50%) translateY(80px);
@@ -251,9 +251,7 @@ body::before{
       max-width:90vw;text-align:center;
     }
     .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
-    
     @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-    
     @media(max-width:768px){
       nav{padding:0.8rem 1rem}
       .nav-title{font-size:1.15rem}
@@ -265,36 +263,7 @@ body::before{
       .home-input-wrap{padding:1.2rem 1.2rem 4rem}
       .globe-submit{bottom:0.8rem;right:1rem}
       .globe-submit svg{width:44px;height:44px}
-      .about-card{padding:1.5rem}
     }
-
-    @media(max-width:400px){
-      .nav-links a{font-size:0.7rem;padding:0.15rem 0.4rem}
-      .chip{font-size:0.65rem;padding:0.25rem 0.65rem}
-    }
-
-/* 1. The Constant Slow Horizontal Spin */
-.globe-spinning-slow {
-    animation: globeRotateHorizontal 12s linear infinite;
-    transform-style: preserve-3d;
-    display: block;
-}
-
-@keyframes globeRotateHorizontal {
-    from { transform: rotateY(0deg); }
-    to { transform: rotateY(360deg); }
-}
-
-/* 2. The Fast Click Spin (Overrides the slow one temporarily) */
-.spinning-fast {
-    animation: globeRotateFast 0.8s ease-in-out !important;
-}
-
-@keyframes globeRotateFast {
-    from { transform: rotateY(0deg); }
-    to { transform: rotateY(360deg); }
-}
-
   </style>
 </head>
 <body>
@@ -317,9 +286,9 @@ body::before{
     <span class="input-label">say it here :</span>
     <textarea id="cardText" placeholder="Share a stereotype, impression, or a wildcard thought from your world." maxlength="400"></textarea>
     <div class="type-chips">
-<div class="chip active" data-type="stereotype" onclick="selectType(this)">🗨️ stereotype i've heard</div>
-<div class="chip" data-type="impressive" onclick="selectType(this)">✨ what impressed me</div>
-<div class="chip" data-type="freeform" onclick="selectType(this)">🃏 just a wildcard</div>
+      <div class="chip active" data-type="stereotype" onclick="selectType(this)">🗨️ stereotype i've heard</div>
+      <div class="chip" data-type="impressive" onclick="selectType(this)">✨ what impressed me</div>
+      <div class="chip" data-type="freeform" onclick="selectType(this)">🃏 just a wildcard</div>
     </div>
     <div class="input-row">
       <div class="input-mini">
@@ -332,7 +301,7 @@ body::before{
       </div>
     </div>
     <div class="globe-submit" onclick="submitCard()">
-<svg class="globe-spinning-slow" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg class="globe-spinning-slow" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="50" cy="50" r="44" stroke="#7a5c30" stroke-width="3" fill="rgba(160,120,70,0.15)"/>
         <ellipse cx="50" cy="50" rx="22" ry="44" stroke="#7a5c30" stroke-width="2"/>
         <line x1="6" y1="50" x2="94" y2="50" stroke="#7a5c30" stroke-width="2"/>
@@ -340,7 +309,6 @@ body::before{
         <path d="M 50 6 Q 28 28 28 50 Q 28 72 50 94" stroke="#7a5c30" stroke-width="2" fill="none"/>
         <line x1="6" y1="30" x2="94" y2="30" stroke="#7a5c30" stroke-width="1.5" opacity="0.5"/>
         <line x1="6" y1="70" x2="94" y2="70" stroke="#7a5c30" stroke-width="1.5" opacity="0.5"/>
-        <ellipse cx="50" cy="88" rx="18" ry="6" fill="rgba(100,70,30,0.2)"/>
       </svg>
       <span>drop it</span>
     </div>
@@ -372,13 +340,10 @@ body::before{
   <div class="about-card">
     <h2>The Wild Cards</h2>
     <p class="tagline">We.hear.you.</p>
-    <p>A <strong>global card wall</strong> where anyone, anywhere, drops a card anonymously about a stereotype they've been handed, something genuinely impressive about another culture, or just an unfiltered truth.</p>
-    <p>Every card gets a <strong>public poll.</strong> How many people across the world felt the same thing? You'll find out. No sign up. No algorithm. Just humans being honest across borders.</p>
+    <p>A <strong>global card wall</strong> where anyone, anywhere, drops a card anonymously about a stereotype they've been handed...</p>
     <div class="about-steps">
-      <div class="about-step"><div class="step-dot">1</div><p>You get a <strong>permanent ID</strong> no account needed. Your device, your voice, forever.</p></div>
-      <div class="about-step"><div class="step-dot">2</div><p><strong>Drop a card.</strong> A stereotype, an impression, a truth. Totally freeform.</p></div>
-      <div class="about-step"><div class="step-dot">3</div><p>The <strong>world votes.</strong> Did they relate? The poll shows how universal your experience really is.</p></div>
-      <div class="about-step"><div class="step-dot">4</div><p>Stereotypes <strong>crumble</strong> when enough people say same here.</p></div>
+      <div class="about-step"><div class="step-dot">1</div><p>You get a <strong>permanent ID</strong> no account needed.</p></div>
+      <div class="about-step"><div class="step-dot">2</div><p><strong>Drop a card.</strong> A stereotype, an impression, a truth.</p></div>
     </div>
   </div>
 </div>
@@ -404,14 +369,13 @@ body::before{
 
   function saveVoted() { localStorage.setItem('twc_voted', JSON.stringify(voted)); }
 
-  // Navigation and UI
-  document.querySelectorAll('.chip').forEach(c => {
-    c.addEventListener('click', () => {
-      document.querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
-      c.classList.add('active'); 
-      selectedType = c.dataset.type;
-    });
-  });
+  function selectType(element) {
+    document.querySelectorAll('.chip').forEach(chip => chip.classList.remove('active'));
+    element.classList.add('active');
+    selectedType = element.getAttribute('data-type');
+    element.style.transform = 'scale(0.95)';
+    setTimeout(() => { element.style.transform = 'scale(1)'; }, 100);
+  }
 
   document.querySelectorAll('.filter-chip').forEach(f => {
     f.addEventListener('click', () => {
@@ -425,51 +389,30 @@ body::before{
     try {
       let deviceKey = localStorage.getItem('twc_device_key');
       if (!deviceKey) return null;
-
-      const { data: existing } = await sb.from('users')
-        .select('gen_z_number')
-        .eq('device_key', deviceKey)
-        .maybeSingle();
-
+      const { data: existing } = await sb.from('users').select('gen_z_number').eq('device_key', deviceKey).maybeSingle();
       if (existing) { 
         userId = 'GEN Z ' + existing.gen_z_number;
         localStorage.setItem('twc_uid', userId);
       }
       return userId;
-    } catch(e) { 
-      console.error("Identity Error:", e);
-      return null;
-    }
-  }
-
-  async function createIdentityOnDrop() {
-    try {
-      let deviceKey = localStorage.getItem('twc_device_key');
-      if (!deviceKey) {
-        deviceKey = 'dk_' + Math.random().toString(36).substr(2,9) + Date.now().toString(36);
-        localStorage.setItem('twc_device_key', deviceKey);
-      }
-      const { data: newUser, error: insertError } = await sb.from('users')
-        .insert([{ device_key: deviceKey }])
-        .select('gen_z_number')
-        .single();
-      if (insertError) throw insertError;
-      if (newUser) {
-        userId = 'GEN Z ' + newUser.gen_z_number;
-        localStorage.setItem('twc_uid', userId);
-        return userId;
-      }
     } catch(e) { return null; }
   }
 
+  async function createIdentityOnDrop() {
+    let deviceKey = localStorage.getItem('twc_device_key') || 'dk_' + Math.random().toString(36).substr(2,9);
+    localStorage.setItem('twc_device_key', deviceKey);
+    const { data: newUser } = await sb.from('users').insert([{ device_key: deviceKey }]).select('gen_z_number').single();
+    if (newUser) {
+      userId = 'GEN Z ' + newUser.gen_z_number;
+      return userId;
+    }
+    return null;
+  }
+
   async function submitCard() {
-    // Globe Spin
     const globe = document.querySelector('.globe-submit svg');
-if(globe) {
-        // This triggers the fast horizontal burst
+    if(globe) {
         globe.classList.add('spinning-fast'); 
-        
-        // This removes it after 0.8s so it can go back to slow spinning
         setTimeout(() => globe.classList.remove('spinning-fast'), 800);
     }
 
@@ -478,9 +421,8 @@ if(globe) {
     if (!text || text.length < 15) { showToast('say a little more...'); return; }
 
     if (!userId) {
-        showToast('assigning your gen z number...');
-        const newId = await createIdentityOnDrop();
-        if (!newId) { showToast('Sync error. Try again.'); return; }
+        showToast('assigning your identity...');
+        await createIdentityOnDrop();
     }
 
     const origin = document.getElementById('originInput').value.trim();
@@ -497,25 +439,15 @@ if(globe) {
       });
       if (error) throw error;
       textInput.value = '';
-      document.getElementById('originInput').value = '';
-      document.getElementById('aboutInput').value = '';
       showToast('card dropped ✨');
       showPage('wildcards', document.querySelectorAll('.nav-links a')[1]);
     } catch(e) { showToast('failed to drop card.'); }
   }
 
   async function vote(id) {
-    // Card Press
-    const cardElement = document.getElementById(`rel_${id}`).closest('.wc-card');
-    if (cardElement) {
-        cardElement.classList.add('card-press');
-        setTimeout(() => cardElement.classList.remove('card-press'), 150);
-    }
-
     if (voted.includes(id)) { showToast('you already related'); return; }
     try {
       const { data: card } = await sb.from('cards').select('votes').eq('id', id).single();
-      if (!card) return;
       const newVotes = (card.votes || 0) + 1;
       await sb.from('cards').update({ votes: newVotes }).eq('id', id);
       voted.push(id); saveVoted();
@@ -539,12 +471,9 @@ if(globe) {
     try {
       let query = sb.from('cards').select('*');
       if (filter !== 'all') query = query.eq('type', filter);
-      const { data: all, error } = await query;
-      if (error) throw error;
-      
+      const { data: all } = await query;
       all.sort((a, b) => {
         if (a.is_pinned && !b.is_pinned) return -1;
-        if (!a.is_pinned && b.is_pinned) return 1;
         if (currentSort === 'votes') return b.votes - a.votes;
         return new Date(b.created_at) - new Date(a.created_at);
       });
@@ -552,7 +481,6 @@ if(globe) {
       grid.innerHTML = all.length ? all.map((c, i) => {
         const pct = Math.min((c.votes/1500)*100, 100);
         const isV = voted.includes(c.id);
-        // String fix here: Correct backtick closing
         return `<div class="wc-card card-entry" style="animation-delay:${i*0.08}s">
           <div class="wc-card-top"><span class="wc-user-id">${c.user_id || 'GEN Z ???'}</span>${badges[c.type] || badges.freeform}</div>
           <div class="wc-route">${esc(c.origin)} ➔ ${esc(c.about)}</div>
@@ -592,27 +520,6 @@ if(globe) {
     const t = document.getElementById('toast');
     if(t) { t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
   }
-// This variable keeps track of which category is selected
-let selectedType = 'stereotype'; 
-
-function selectType(element) {
-    // 1. Remove the 'active' class from whichever chip currently has it
-    document.querySelectorAll('.chip').forEach(chip => {
-        chip.classList.remove('active');
-    });
-
-    // 2. Add the 'active' class to the chip you just clicked
-    element.classList.add('active');
-
-    // 3. Update our variable with the new data-type (stereotype, impressive, or freeform)
-    selectedType = element.getAttribute('data-type');
-    
-    // 4. (Optional) Small visual pop effect
-    element.style.transform = 'scale(0.95)';
-    setTimeout(() => {
-        element.style.transform = 'scale(1)';
-    }, 100);
-}
   
   async function startApp() {
     await initUser();
