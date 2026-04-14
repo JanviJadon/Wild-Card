@@ -234,6 +234,42 @@
     @media(max-width:400px){
       .nav-links a{font-size:0.7rem;padding:0.15rem 0.4rem}
       .chip{font-size:0.65rem;padding:0.25rem 0.65rem}
+      /* 1. The Globe Spin Rule */
+.spinning {
+    animation: globeRotate 0.8s ease-in-out;
+}
+
+@keyframes globeRotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+      
+.card-press {
+    transform: scale(0.96) !important;
+    transition: transform 0.1s ease;
+}
+      
+.card-entry {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: cardSlideIn 0.5s ease forwards;
+}
+
+@keyframes cardSlideIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.category-chip {
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.category-chip:hover {
+    transform: translateY(-3px) scale(1.05);
+    background-color: var(--accent);
+    color: white;
+}
     }
   </style>
 </head>
