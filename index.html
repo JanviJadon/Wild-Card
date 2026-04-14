@@ -361,20 +361,27 @@
   });
 
   // Submit Logic
-  async function submitCard() {
-    // If userId isn't ready, try to get it again
-    if (!userId) {
-        showToast('syncing with the grid... try in 2 seconds');
-        await initUser();
-        return;
-    }
-
+async function submitCard() {
     const textInput = document.getElementById('cardText');
     const text = textInput.value.trim();
+    
+    if (!text || text.length < 15) { 
+      showToast('say a little more...'); 
+      return; 
+    }
+
+    // If userId is missing, try to fetch it one last time before giving up
+    if (!userId) {
+        showToast('establishing identity... one sec');
+        await initUser();
+        if (!userId) {
+          showToast('Connection error. Please refresh.');
+          return;
+        }
+    }
+
     const origin = document.getElementById('originInput').value.trim();
     const about = document.getElementById('aboutInput').value.trim();
-    
-    if (!text || text.length < 15) { showToast('say a little more...'); return; }
 
     try {
       const { error } = await sb.from('cards').insert({
@@ -394,7 +401,8 @@
       showToast('card dropped ✨');
       showPage('wildcards', document.querySelectorAll('.nav-links a')[1]);
     } catch(e) {
-      showToast('something went wrong...');
+      console.error("Submit Error:", e);
+      showToast('failed to drop card. try again.');
     }
   }
 
@@ -417,7 +425,7 @@
     const btn = document.getElementById('rel_'+id);
     if (bar) bar.style.width = Math.min((votes/1500)*100,100)+'%';
     if (cnt) cnt.innerHTML = `<b>${votes}</b> people related`;
-    if (btn) { btn.classList.add('voted'); btn.textContent = 'related ?'; }
+    if (btn) { btn.classList.add('voted'); btn.textContent = 'related ✔'; }
   }
 
   // Card Rendering
@@ -484,7 +492,7 @@
   }
 
   // IDENTITY FIX: This ensures we get the REAL number from the DB
-  async function initUser() {
+async function initUser() {
     try {
       let deviceKey = localStorage.getItem('twc_device_key');
       if (!deviceKey) {
@@ -492,28 +500,31 @@
         localStorage.setItem('twc_device_key', deviceKey);
       }
 
-      // Check for existing user
-      const { data: existing } = await sb.from('users')
+      // 1. Try to find existing user
+      const { data: existing, error: fetchError } = await sb.from('users')
         .select('gen_z_number')
         .eq('device_key', deviceKey)
-        .single();
+        .maybeSingle(); // maybeSingle is safer than .single()
 
       if (existing) { 
         userId = 'GEN Z ' + existing.gen_z_number; 
       } else {
-        // Create new user and get the assigned serial number
-        const { data: newUser } = await sb.from('users')
-          .insert({ device_key: deviceKey })
+        // 2. If not found, create new user
+        const { data: newUser, error: insertError } = await sb.from('users')
+          .insert([{ device_key: deviceKey }])
           .select('gen_z_number')
           .single();
+          
         if (newUser) userId = 'GEN Z ' + newUser.gen_z_number;
       }
       
       if (userId) {
         localStorage.setItem('twc_uid', userId);
-        console.log("ID Active:", userId);
+        console.log("Identity Active:", userId);
       }
-    } catch(e) { console.error("Identity Error:", e); }
+    } catch(e) { 
+      console.error("Identity Error:", e);
+    }
   }
 
   async function startApp() {
