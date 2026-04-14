@@ -343,7 +343,7 @@
 
   function saveVoted() { localStorage.setItem('twc_voted', JSON.stringify(voted)); }
 
-  // UI Interactivity
+  // Navigation and UI
   document.querySelectorAll('.chip').forEach(c => {
     c.addEventListener('click', () => {
       document.querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
@@ -360,7 +360,7 @@
     });
   });
 
-  // THE FIX: Identity Management
+  // IDENTITY: Now returns the ID to ensure synchronous availability
   async function initUser() {
     try {
       let deviceKey = localStorage.getItem('twc_device_key');
@@ -369,37 +369,31 @@
         localStorage.setItem('twc_device_key', deviceKey);
       }
 
-      // Check if user exists
-      const { data: existing, error: fetchError } = await sb.from('users')
+      const { data: existing } = await sb.from('users')
         .select('gen_z_number')
         .eq('device_key', deviceKey)
         .maybeSingle();
 
-      if (existing && existing.gen_z_number) { 
+      if (existing) { 
         userId = 'GEN Z ' + existing.gen_z_number; 
       } else {
-        // Create new user entry
-        const { data: newUser, error: insertError } = await sb.from('users')
+        const { data: newUser, error } = await sb.from('users')
           .insert([{ device_key: deviceKey }])
           .select('gen_z_number')
           .single();
-          
-        if (insertError) throw insertError;
+        
         if (newUser) userId = 'GEN Z ' + newUser.gen_z_number;
       }
       
-      if (userId) {
-        localStorage.setItem('twc_uid', userId);
-        console.log("Identity established:", userId);
-      }
+      if (userId) localStorage.setItem('twc_uid', userId);
+      return userId; 
     } catch(e) { 
-      console.error("Identity Phase Failed:", e);
-      // Fallback to a temporary ID so the user can still post if the DB is lagging
-      userId = localStorage.getItem('twc_uid') || 'GEN Z ...';
+      console.error("Identity Error:", e);
+      return null;
     }
   }
 
-  // THE FIX: Card Submission
+  // SUBMIT: Now waits for the identity before allowing the drop
   async function submitCard() {
     const textInput = document.getElementById('cardText');
     const text = textInput.value.trim();
@@ -409,10 +403,14 @@
       return; 
     }
 
-    // Attempt to get ID if it's missing
+    // Force identity check if missing
     if (!userId || userId.includes('...')) {
         showToast('syncing identity...');
-        await initUser();
+        userId = await initUser();
+        if (!userId) {
+          showToast('Identity sync failed. Refreshing might help.');
+          return;
+        }
     }
 
     const origin = document.getElementById('originInput').value.trim();
@@ -428,24 +426,19 @@
         votes: 0
       });
 
-      if (error) {
-        console.error("Database Insert Error:", error);
-        throw error;
-      }
+      if (error) throw error;
       
       textInput.value = '';
       document.getElementById('originInput').value = '';
       document.getElementById('aboutInput').value = '';
       showToast('card dropped ✨');
-      
-      // Force refresh the list
       showPage('wildcards', document.querySelectorAll('.nav-links a')[1]);
     } catch(e) {
-      showToast('error: check if RLS is enabled in Supabase');
+      showToast('failed to drop card. check RLS settings.');
     }
   }
 
-  // Voting and Rendering (Keep your existing logic)
+  // Keep existing vote and render logic
   async function vote(id) {
     if (voted.includes(id)) { showToast('you already related'); return; }
     try {
@@ -464,7 +457,7 @@
     const btn = document.getElementById('rel_'+id);
     if (bar) bar.style.width = Math.min((votes/1500)*100,100)+'%';
     if (cnt) cnt.innerHTML = `<b>${votes}</b> people related`;
-    if (btn) { btn.classList.add('voted'); btn.textContent = 'related ?'; }
+    if (btn) { btn.classList.add('voted'); btn.textContent = 'related ✔'; }
   }
 
   async function renderCards(filter) {
@@ -496,7 +489,7 @@
             <div class="poll-bar-bg"><div class="poll-bar-fill" id="bar_${c.id}" style="width:${pct}%"></div></div>
             <div class="poll-bottom">
               <div class="poll-count" id="cnt_${c.id}"><b>${c.votes}</b> people related</div>
-              <button class="relate-btn ${isV?'voted':''}" id="rel_${c.id}" onclick="vote('${c.id}')">${isV?'related ?':'i relate'}</button>
+              <button class="relate-btn ${isV?'voted':''}" id="rel_${c.id}" onclick="vote('${c.id}')">${isV?'related ✔':'i relate'}</button>
             </div>
           </div>
         </div>`;
@@ -530,7 +523,7 @@
   }
 
   async function startApp() {
-    await initUser();
+    await initUser(); 
     renderCards('all');
   }
 
