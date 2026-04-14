@@ -239,14 +239,27 @@
       .chip{font-size:0.65rem;padding:0.25rem 0.65rem}
     }
 
-    /* Surgical Fix: Animations moved outside media query */
-    .spinning { animation: globeRotate 0.8s ease-in-out; }
-    @keyframes globeRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    .card-press { transform: scale(0.96) !important; transition: transform 0.1s ease; }
-    .card-entry { opacity: 0; transform: translateY(20px); animation: cardSlideIn 0.5s ease forwards; }
-    @keyframes cardSlideIn { to { opacity: 1; transform: translateY(0); } }
-    .chip { transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-    .chip:hover { transform: translateY(-3px) scale(1.05); }
+/* 1. The Constant Slow Horizontal Spin */
+.globe-spinning-slow {
+    animation: globeRotateHorizontal 12s linear infinite;
+    transform-style: preserve-3d;
+    display: block;
+}
+
+@keyframes globeRotateHorizontal {
+    from { transform: rotateY(0deg); }
+    to { transform: rotateY(360deg); }
+}
+
+/* 2. The Fast Click Spin (Overrides the slow one temporarily) */
+.spinning-fast {
+    animation: globeRotateFast 0.8s ease-in-out !important;
+}
+
+@keyframes globeRotateFast {
+    from { transform: rotateY(0deg); }
+    to { transform: rotateY(360deg); }
+}
 
   </style>
 </head>
@@ -284,7 +297,7 @@
       </div>
     </div>
     <div class="globe-submit" onclick="submitCard()">
-      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg class="globe-spinning-slow" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="50" cy="50" r="44" stroke="#7a5c30" stroke-width="3" fill="rgba(160,120,70,0.15)"/>
         <ellipse cx="50" cy="50" rx="22" ry="44" stroke="#7a5c30" stroke-width="2"/>
         <line x1="6" y1="50" x2="94" y2="50" stroke="#7a5c30" stroke-width="2"/>
@@ -417,9 +430,12 @@
   async function submitCard() {
     // Globe Spin
     const globe = document.querySelector('.globe-submit svg');
-    if(globe) {
-        globe.classList.add('spinning');
-        setTimeout(() => globe.classList.remove('spinning'), 800);
+if(globe) {
+        // This triggers the fast horizontal burst
+        globe.classList.add('spinning-fast'); 
+        
+        // This removes it after 0.8s so it can go back to slow spinning
+        setTimeout(() => globe.classList.remove('spinning-fast'), 800);
     }
 
     const textInput = document.getElementById('cardText');
