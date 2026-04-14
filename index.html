@@ -369,8 +369,8 @@ async function initUser() {
         localStorage.setItem('twc_device_key', deviceKey);
       }
 
-      // 1. Try to find the existing user
-      const { data: existing } = await sb.from('users')
+      // 1. Check for existing
+      const { data: existing, error: fetchError } = await sb.from('users')
         .select('gen_z_number')
         .eq('device_key', deviceKey)
         .maybeSingle();
@@ -378,27 +378,37 @@ async function initUser() {
       if (existing && existing.gen_z_number) { 
         userId = 'GEN Z ' + existing.gen_z_number; 
       } else {
-        // 2. Create new user - the .select() here needs the SELECT policy to work!
+        // 2. Insert and get data back
         const { data: newUser, error: insertError } = await sb.from('users')
           .insert([{ device_key: deviceKey }])
-          .select('gen_z_number')
-          .single();
+          .select(); // Grab the whole row to be safe
         
-        if (insertError) throw insertError;
-        if (newUser) userId = 'GEN Z ' + newUser.gen_z_number;
+        if (insertError) {
+          console.error("Insert Error:", insertError.message);
+          throw insertError;
+        }
+
+        if (newUser && newUser.length > 0) {
+          userId = 'GEN Z ' + newUser[0].gen_z_number;
+        }
       }
       
       if (userId) {
         localStorage.setItem('twc_uid', userId);
-        console.log("Identity Active:", userId);
+        console.log("Identity established:", userId);
+        return userId;
       }
-      return userId;
+      
+      throw new Error("No ID returned from Supabase");
+
     } catch(e) { 
-      console.error("Identity Error:", e);
+      console.error("Sync Failure Details:", e);
+      // Fallback: If DB fails, give them a temporary session ID 
+      // so they can at least see the cards
+      userId = "GEN Z ..."; 
       return null;
     }
   }
-
   // SUBMIT: Now waits for the identity before allowing the drop
   async function submitCard() {
     const textInput = document.getElementById('cardText');
