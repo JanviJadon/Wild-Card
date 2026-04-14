@@ -494,7 +494,7 @@ setTimeout(() => globe.classList.remove('spinning'), 800); // Cleans up after sp
   }
 
   // Keep existing vote and render logic
-function vote(id) {
+async function vote(id) {
     // Vibe Code: Find the card and make it "press"
     const cardElement = document.getElementById(`rel_${id}`).closest('.wc-card');
     if (cardElement) {
