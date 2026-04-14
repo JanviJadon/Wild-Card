@@ -361,7 +361,7 @@
   });
 
   // IDENTITY: Now returns the ID to ensure synchronous availability
-  async function initUser() {
+async function initUser() {
     try {
       let deviceKey = localStorage.getItem('twc_device_key');
       if (!deviceKey) {
@@ -369,24 +369,30 @@
         localStorage.setItem('twc_device_key', deviceKey);
       }
 
+      // 1. Try to find the existing user
       const { data: existing } = await sb.from('users')
         .select('gen_z_number')
         .eq('device_key', deviceKey)
         .maybeSingle();
 
-      if (existing) { 
+      if (existing && existing.gen_z_number) { 
         userId = 'GEN Z ' + existing.gen_z_number; 
       } else {
-        const { data: newUser, error } = await sb.from('users')
+        // 2. Create new user - the .select() here needs the SELECT policy to work!
+        const { data: newUser, error: insertError } = await sb.from('users')
           .insert([{ device_key: deviceKey }])
           .select('gen_z_number')
           .single();
         
+        if (insertError) throw insertError;
         if (newUser) userId = 'GEN Z ' + newUser.gen_z_number;
       }
       
-      if (userId) localStorage.setItem('twc_uid', userId);
-      return userId; 
+      if (userId) {
+        localStorage.setItem('twc_uid', userId);
+        console.log("Identity Active:", userId);
+      }
+      return userId;
     } catch(e) { 
       console.error("Identity Error:", e);
       return null;
