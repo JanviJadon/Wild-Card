@@ -458,7 +458,7 @@ async function submitCard() {
             <div class="poll-bar-bg"><div class="poll-bar-fill" id="bar_${c.id}" style="width:${pct}%"></div></div>
             <div class="poll-bottom">
               <div class="poll-count" id="cnt_${c.id}"><b>${c.votes}</b> people related</div>
-              <button class="relate-btn ${isV?'voted':''}" id="rel_${c.id}" onclick="vote('${c.id}')">${isV?'related ?':'i relate'}</button>
+              <button class="relate-btn ${isV?'voted':''}" id="rel_${c.id}" onclick="vote('${c.id}')">${isV?'related ✔':'i relate'}</button>
             </div>
           </div>
         </div>`;
