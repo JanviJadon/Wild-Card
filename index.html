@@ -396,11 +396,10 @@
     });
   });
 
-  // IDENTITY: Now returns the ID to ensure synchronous availability
-async function initUser() {
+  async function initUser() {
     try {
       let deviceKey = localStorage.getItem('twc_device_key');
-      if (!deviceKey) return null; // No key means we haven't identified them yet
+      if (!deviceKey) return null;
 
       const { data: existing } = await sb.from('users')
         .select('gen_z_number')
@@ -410,7 +409,6 @@ async function initUser() {
       if (existing) { 
         userId = 'GEN Z ' + existing.gen_z_number;
         localStorage.setItem('twc_uid', userId);
-        console.log("Welcome back:", userId);
       }
       return userId;
     } catch(e) { 
@@ -419,7 +417,6 @@ async function initUser() {
     }
   }
 
-  // This is the NEW function to only be called when "Drop" is clicked
   async function createIdentityOnDrop() {
     try {
       let deviceKey = localStorage.getItem('twc_device_key');
@@ -427,45 +424,35 @@ async function initUser() {
         deviceKey = 'dk_' + Math.random().toString(36).substr(2,9) + Date.now().toString(36);
         localStorage.setItem('twc_device_key', deviceKey);
       }
-
       const { data: newUser, error: insertError } = await sb.from('users')
         .insert([{ device_key: deviceKey }])
         .select('gen_z_number')
         .single();
-        
       if (insertError) throw insertError;
       if (newUser) {
         userId = 'GEN Z ' + newUser.gen_z_number;
         localStorage.setItem('twc_uid', userId);
         return userId;
       }
-    } catch(e) {
-      console.error("Failed to create identity:", e);
-      return null;
-    }
+    } catch(e) { return null; }
   }
-  // SUBMIT: Now waits for the identity before allowing the drop
-async function submitCard() {
-// Add this at the start of submitCard()
-const globe = document.querySelector('.globe-submit svg');
-globe.classList.add('spinning');
-setTimeout(() => globe.classList.remove('spinning'), 800); // Cleans up after spin
-  const textInput = document.getElementById('cardText');
-    const text = textInput.value.trim();
-    
-    if (!text || text.length < 15) { 
-      showToast('say a little more...'); 
-      return; 
+
+  async function submitCard() {
+    // VIBE: Globe Spin
+    const globe = document.querySelector('.globe-submit svg');
+    if(globe) {
+        globe.classList.add('spinning');
+        setTimeout(() => globe.classList.remove('spinning'), 800);
     }
 
-    // IF NO USER ID, CREATE IT NOW (Only when they actually drop a card)
+    const textInput = document.getElementById('cardText');
+    const text = textInput.value.trim();
+    if (!text || text.length < 15) { showToast('say a little more...'); return; }
+
     if (!userId) {
         showToast('assigning your gen z number...');
         const newId = await createIdentityOnDrop();
-        if (!newId) {
-          showToast('Sync error. Try again.');
-          return;
-        }
+        if (!newId) { showToast('Sync error. Try again.'); return; }
     }
 
     const origin = document.getElementById('originInput').value.trim();
@@ -480,27 +467,23 @@ setTimeout(() => globe.classList.remove('spinning'), 800); // Cleans up after sp
         text: text, 
         votes: 0
       });
-
       if (error) throw error;
-      
       textInput.value = '';
       document.getElementById('originInput').value = '';
       document.getElementById('aboutInput').value = '';
       showToast('card dropped ✨');
       showPage('wildcards', document.querySelectorAll('.nav-links a')[1]);
-    } catch(e) {
-      showToast('failed to drop card. check RLS settings.');
-    }
+    } catch(e) { showToast('failed to drop card.'); }
   }
 
-  // Keep existing vote and render logic
-async function vote(id) {
-    // Vibe Code: Find the card and make it "press"
+  async function vote(id) {
+    // VIBE: Card Press
     const cardElement = document.getElementById(`rel_${id}`).closest('.wc-card');
     if (cardElement) {
         cardElement.classList.add('card-press');
         setTimeout(() => cardElement.classList.remove('card-press'), 150);
     }
+
     if (voted.includes(id)) { showToast('you already related'); return; }
     try {
       const { data: card } = await sb.from('cards').select('votes').eq('id', id).single();
@@ -528,7 +511,6 @@ async function vote(id) {
     try {
       let query = sb.from('cards').select('*');
       if (filter !== 'all') query = query.eq('type', filter);
-      
       const { data: all, error } = await query;
       if (error) throw error;
       
@@ -542,7 +524,8 @@ async function vote(id) {
       grid.innerHTML = all.length ? all.map((c, i) => {
         const pct = Math.min((c.votes/1500)*100, 100);
         const isV = voted.includes(c.id);
-return `<div class="wc-card card-entry" style="animation-delay:${i*0.08}s">`
+        // FIXED THE STRING BACKTICK BELOW
+        return `<div class="wc-card card-entry" style="animation-delay:${i*0.08}s">
           <div class="wc-card-top"><span class="wc-user-id">${c.user_id || 'GEN Z ???'}</span>${badges[c.type] || badges.freeform}</div>
           <div class="wc-route">${esc(c.origin)} ➔ ${esc(c.about)}</div>
           <div class="wc-text">${esc(c.text)}</div>
@@ -579,12 +562,431 @@ return `<div class="wc-card card-entry" style="animation-delay:${i*0.08}s">`
 
   function showToast(msg) {
     const t = document.getElementById('toast');
-    t.innerText = msg; t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 3000);
+    if(t) { t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
   }
 
-async function startApp() {
-    await initUser(); // Silent check for old users
+  async function startApp() {
+    await initUser();
+    renderCards('all');
+  }
+  startApp();
+</script><script>
+  const SUPABASE_URL = 'https://ketbeakwvwnkezkmelff.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtldGJlYWt3dndua2V6a21lbGZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNTMxODcsImV4cCI6MjA5MDYyOTE4N30.5fxnIWomxQiEVj4attkcxPLceGiOsVrcyfxOhRH-Bbk';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  
+  let userId = null;
+  let voted = JSON.parse(localStorage.getItem('twc_voted') || '[]');
+  let selectedType = 'stereotype';
+  let currentFilter = 'all';
+  let currentSort = 'recent';
+
+  const badges = {
+    stereotype: '<span class="wc-badge badge-s">stereotype</span>',
+    impressive: '<span class="wc-badge badge-i">impressive</span>',
+    freeform: '<span class="wc-badge badge-f">wildcard</span>'
+  };
+
+  function saveVoted() { localStorage.setItem('twc_voted', JSON.stringify(voted)); }
+
+  // Navigation and UI
+  document.querySelectorAll('.chip').forEach(c => {
+    c.addEventListener('click', () => {
+      document.querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
+      c.classList.add('active'); 
+      selectedType = c.dataset.type;
+    });
+  });
+
+  document.querySelectorAll('.filter-chip').forEach(f => {
+    f.addEventListener('click', () => {
+      document.querySelectorAll('.filter-chip').forEach(x => x.classList.remove('active'));
+      f.classList.add('active');
+      renderCards(f.dataset.filter);
+    });
+  });
+
+  async function initUser() {
+    try {
+      let deviceKey = localStorage.getItem('twc_device_key');
+      if (!deviceKey) return null;
+
+      const { data: existing } = await sb.from('users')
+        .select('gen_z_number')
+        .eq('device_key', deviceKey)
+        .maybeSingle();
+
+      if (existing) { 
+        userId = 'GEN Z ' + existing.gen_z_number;
+        localStorage.setItem('twc_uid', userId);
+      }
+      return userId;
+    } catch(e) { 
+      console.error("Identity Error:", e);
+      return null;
+    }
+  }
+
+  async function createIdentityOnDrop() {
+    try {
+      let deviceKey = localStorage.getItem('twc_device_key');
+      if (!deviceKey) {
+        deviceKey = 'dk_' + Math.random().toString(36).substr(2,9) + Date.now().toString(36);
+        localStorage.setItem('twc_device_key', deviceKey);
+      }
+      const { data: newUser, error: insertError } = await sb.from('users')
+        .insert([{ device_key: deviceKey }])
+        .select('gen_z_number')
+        .single();
+      if (insertError) throw insertError;
+      if (newUser) {
+        userId = 'GEN Z ' + newUser.gen_z_number;
+        localStorage.setItem('twc_uid', userId);
+        return userId;
+      }
+    } catch(e) { return null; }
+  }
+
+  async function submitCard() {
+    // VIBE: Globe Spin
+    const globe = document.querySelector('.globe-submit svg');
+    if(globe) {
+        globe.classList.add('spinning');
+        setTimeout(() => globe.classList.remove('spinning'), 800);
+    }
+
+    const textInput = document.getElementById('cardText');
+    const text = textInput.value.trim();
+    if (!text || text.length < 15) { showToast('say a little more...'); return; }
+
+    if (!userId) {
+        showToast('assigning your gen z number...');
+        const newId = await createIdentityOnDrop();
+        if (!newId) { showToast('Sync error. Try again.'); return; }
+    }
+
+    const origin = document.getElementById('originInput').value.trim();
+    const about = document.getElementById('aboutInput').value.trim();
+
+    try {
+      const { error } = await sb.from('cards').insert({
+        user_id: userId,
+        type: selectedType,
+        origin: origin || 'Anonymous', 
+        about: about || 'The World',
+        text: text, 
+        votes: 0
+      });
+      if (error) throw error;
+      textInput.value = '';
+      document.getElementById('originInput').value = '';
+      document.getElementById('aboutInput').value = '';
+      showToast('card dropped ✨');
+      showPage('wildcards', document.querySelectorAll('.nav-links a')[1]);
+    } catch(e) { showToast('failed to drop card.'); }
+  }
+
+  async function vote(id) {
+    // VIBE: Card Press
+    const cardElement = document.getElementById(`rel_${id}`).closest('.wc-card');
+    if (cardElement) {
+        cardElement.classList.add('card-press');
+        setTimeout(() => cardElement.classList.remove('card-press'), 150);
+    }
+
+    if (voted.includes(id)) { showToast('you already related'); return; }
+    try {
+      const { data: card } = await sb.from('cards').select('votes').eq('id', id).single();
+      if (!card) return;
+      const newVotes = (card.votes || 0) + 1;
+      await sb.from('cards').update({ votes: newVotes }).eq('id', id);
+      voted.push(id); saveVoted();
+      updateVoteUI(id, newVotes);
+    } catch(e) { console.error(e); }
+  }
+
+  function updateVoteUI(id, votes) {
+    const bar = document.getElementById('bar_'+id);
+    const cnt = document.getElementById('cnt_'+id);
+    const btn = document.getElementById('rel_'+id);
+    if (bar) bar.style.width = Math.min((votes/1500)*100,100)+'%';
+    if (cnt) cnt.innerHTML = `<b>${votes}</b> people related`;
+    if (btn) { btn.classList.add('voted'); btn.textContent = 'related ✔'; }
+  }
+
+  async function renderCards(filter) {
+    currentFilter = filter;
+    const grid = document.getElementById('cardsGrid');
+    grid.innerHTML = '<div class="loading">loading cards...</div>';
+    try {
+      let query = sb.from('cards').select('*');
+      if (filter !== 'all') query = query.eq('type', filter);
+      const { data: all, error } = await query;
+      if (error) throw error;
+      
+      all.sort((a, b) => {
+        if (a.is_pinned && !b.is_pinned) return -1;
+        if (!a.is_pinned && b.is_pinned) return 1;
+        if (currentSort === 'votes') return b.votes - a.votes;
+        return new Date(b.created_at) - new Date(a.created_at);
+      });
+
+      grid.innerHTML = all.length ? all.map((c, i) => {
+        const pct = Math.min((c.votes/1500)*100, 100);
+        const isV = voted.includes(c.id);
+        // FIXED THE STRING BACKTICK BELOW
+        return `<div class="wc-card card-entry" style="animation-delay:${i*0.08}s">
+          <div class="wc-card-top"><span class="wc-user-id">${c.user_id || 'GEN Z ???'}</span>${badges[c.type] || badges.freeform}</div>
+          <div class="wc-route">${esc(c.origin)} ➔ ${esc(c.about)}</div>
+          <div class="wc-text">${esc(c.text)}</div>
+          <div class="wc-poll">
+            <div class="poll-bar-bg"><div class="poll-bar-fill" id="bar_${c.id}" style="width:${pct}%"></div></div>
+            <div class="poll-bottom">
+              <div class="poll-count" id="cnt_${c.id}"><b>${c.votes}</b> people related</div>
+              <button class="relate-btn ${isV?'voted':''}" id="rel_${c.id}" onclick="vote('${c.id}')">${isV?'related ✔':'i relate'}</button>
+            </div>
+          </div>
+        </div>`;
+      }).join('') : '<div class="empty">no cards here yet.</div>';
+    } catch(e) { grid.innerHTML = '<div class="empty">error loading cards.</div>'; }
+  }
+
+  function esc(t){ return t ? t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''; }
+
+  function setSort(sort, el) {
+    currentSort = sort;
+    document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    renderCards(currentFilter);
+  }
+
+  function showPage(name, el) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+    const target = document.getElementById('page-'+name);
+    if(target) target.classList.add('active');
+    if (el) el.classList.add('active');
+    if (name === 'wildcards') renderCards(currentFilter);
+    window.scrollTo(0,0);
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    if(t) { t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
+  }
+
+  async function startApp() {
+    await initUser();
+    renderCards('all');
+  }
+  startApp();
+</script><script>
+  const SUPABASE_URL = 'https://ketbeakwvwnkezkmelff.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtldGJlYWt3dndua2V6a21lbGZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNTMxODcsImV4cCI6MjA5MDYyOTE4N30.5fxnIWomxQiEVj4attkcxPLceGiOsVrcyfxOhRH-Bbk';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  
+  let userId = null;
+  let voted = JSON.parse(localStorage.getItem('twc_voted') || '[]');
+  let selectedType = 'stereotype';
+  let currentFilter = 'all';
+  let currentSort = 'recent';
+
+  const badges = {
+    stereotype: '<span class="wc-badge badge-s">stereotype</span>',
+    impressive: '<span class="wc-badge badge-i">impressive</span>',
+    freeform: '<span class="wc-badge badge-f">wildcard</span>'
+  };
+
+  function saveVoted() { localStorage.setItem('twc_voted', JSON.stringify(voted)); }
+
+  // Navigation and UI
+  document.querySelectorAll('.chip').forEach(c => {
+    c.addEventListener('click', () => {
+      document.querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
+      c.classList.add('active'); 
+      selectedType = c.dataset.type;
+    });
+  });
+
+  document.querySelectorAll('.filter-chip').forEach(f => {
+    f.addEventListener('click', () => {
+      document.querySelectorAll('.filter-chip').forEach(x => x.classList.remove('active'));
+      f.classList.add('active');
+      renderCards(f.dataset.filter);
+    });
+  });
+
+  async function initUser() {
+    try {
+      let deviceKey = localStorage.getItem('twc_device_key');
+      if (!deviceKey) return null;
+
+      const { data: existing } = await sb.from('users')
+        .select('gen_z_number')
+        .eq('device_key', deviceKey)
+        .maybeSingle();
+
+      if (existing) { 
+        userId = 'GEN Z ' + existing.gen_z_number;
+        localStorage.setItem('twc_uid', userId);
+      }
+      return userId;
+    } catch(e) { 
+      console.error("Identity Error:", e);
+      return null;
+    }
+  }
+
+  async function createIdentityOnDrop() {
+    try {
+      let deviceKey = localStorage.getItem('twc_device_key');
+      if (!deviceKey) {
+        deviceKey = 'dk_' + Math.random().toString(36).substr(2,9) + Date.now().toString(36);
+        localStorage.setItem('twc_device_key', deviceKey);
+      }
+      const { data: newUser, error: insertError } = await sb.from('users')
+        .insert([{ device_key: deviceKey }])
+        .select('gen_z_number')
+        .single();
+      if (insertError) throw insertError;
+      if (newUser) {
+        userId = 'GEN Z ' + newUser.gen_z_number;
+        localStorage.setItem('twc_uid', userId);
+        return userId;
+      }
+    } catch(e) { return null; }
+  }
+
+  async function submitCard() {
+    // VIBE: Globe Spin
+    const globe = document.querySelector('.globe-submit svg');
+    if(globe) {
+        globe.classList.add('spinning');
+        setTimeout(() => globe.classList.remove('spinning'), 800);
+    }
+
+    const textInput = document.getElementById('cardText');
+    const text = textInput.value.trim();
+    if (!text || text.length < 15) { showToast('say a little more...'); return; }
+
+    if (!userId) {
+        showToast('assigning your gen z number...');
+        const newId = await createIdentityOnDrop();
+        if (!newId) { showToast('Sync error. Try again.'); return; }
+    }
+
+    const origin = document.getElementById('originInput').value.trim();
+    const about = document.getElementById('aboutInput').value.trim();
+
+    try {
+      const { error } = await sb.from('cards').insert({
+        user_id: userId,
+        type: selectedType,
+        origin: origin || 'Anonymous', 
+        about: about || 'The World',
+        text: text, 
+        votes: 0
+      });
+      if (error) throw error;
+      textInput.value = '';
+      document.getElementById('originInput').value = '';
+      document.getElementById('aboutInput').value = '';
+      showToast('card dropped ✨');
+      showPage('wildcards', document.querySelectorAll('.nav-links a')[1]);
+    } catch(e) { showToast('failed to drop card.'); }
+  }
+
+  async function vote(id) {
+    // VIBE: Card Press
+    const cardElement = document.getElementById(`rel_${id}`).closest('.wc-card');
+    if (cardElement) {
+        cardElement.classList.add('card-press');
+        setTimeout(() => cardElement.classList.remove('card-press'), 150);
+    }
+
+    if (voted.includes(id)) { showToast('you already related'); return; }
+    try {
+      const { data: card } = await sb.from('cards').select('votes').eq('id', id).single();
+      if (!card) return;
+      const newVotes = (card.votes || 0) + 1;
+      await sb.from('cards').update({ votes: newVotes }).eq('id', id);
+      voted.push(id); saveVoted();
+      updateVoteUI(id, newVotes);
+    } catch(e) { console.error(e); }
+  }
+
+  function updateVoteUI(id, votes) {
+    const bar = document.getElementById('bar_'+id);
+    const cnt = document.getElementById('cnt_'+id);
+    const btn = document.getElementById('rel_'+id);
+    if (bar) bar.style.width = Math.min((votes/1500)*100,100)+'%';
+    if (cnt) cnt.innerHTML = `<b>${votes}</b> people related`;
+    if (btn) { btn.classList.add('voted'); btn.textContent = 'related ✔'; }
+  }
+
+  async function renderCards(filter) {
+    currentFilter = filter;
+    const grid = document.getElementById('cardsGrid');
+    grid.innerHTML = '<div class="loading">loading cards...</div>';
+    try {
+      let query = sb.from('cards').select('*');
+      if (filter !== 'all') query = query.eq('type', filter);
+      const { data: all, error } = await query;
+      if (error) throw error;
+      
+      all.sort((a, b) => {
+        if (a.is_pinned && !b.is_pinned) return -1;
+        if (!a.is_pinned && b.is_pinned) return 1;
+        if (currentSort === 'votes') return b.votes - a.votes;
+        return new Date(b.created_at) - new Date(a.created_at);
+      });
+
+      grid.innerHTML = all.length ? all.map((c, i) => {
+        const pct = Math.min((c.votes/1500)*100, 100);
+        const isV = voted.includes(c.id);
+        // FIXED THE STRING BACKTICK BELOW
+        return `<div class="wc-card card-entry" style="animation-delay:${i*0.08}s">
+          <div class="wc-card-top"><span class="wc-user-id">${c.user_id || 'GEN Z ???'}</span>${badges[c.type] || badges.freeform}</div>
+          <div class="wc-route">${esc(c.origin)} ➔ ${esc(c.about)}</div>
+          <div class="wc-text">${esc(c.text)}</div>
+          <div class="wc-poll">
+            <div class="poll-bar-bg"><div class="poll-bar-fill" id="bar_${c.id}" style="width:${pct}%"></div></div>
+            <div class="poll-bottom">
+              <div class="poll-count" id="cnt_${c.id}"><b>${c.votes}</b> people related</div>
+              <button class="relate-btn ${isV?'voted':''}" id="rel_${c.id}" onclick="vote('${c.id}')">${isV?'related ✔':'i relate'}</button>
+            </div>
+          </div>
+        </div>`;
+      }).join('') : '<div class="empty">no cards here yet.</div>';
+    } catch(e) { grid.innerHTML = '<div class="empty">error loading cards.</div>'; }
+  }
+
+  function esc(t){ return t ? t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''; }
+
+  function setSort(sort, el) {
+    currentSort = sort;
+    document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    renderCards(currentFilter);
+  }
+
+  function showPage(name, el) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+    const target = document.getElementById('page-'+name);
+    if(target) target.classList.add('active');
+    if (el) el.classList.add('active');
+    if (name === 'wildcards') renderCards(currentFilter);
+    window.scrollTo(0,0);
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    if(t) { t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
+  }
+
+  async function startApp() {
+    await initUser();
     renderCards('all');
   }
   startApp();
