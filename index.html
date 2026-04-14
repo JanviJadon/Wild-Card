@@ -364,53 +364,52 @@
 async function initUser() {
     try {
       let deviceKey = localStorage.getItem('twc_device_key');
+      if (!deviceKey) return null; // No key means we haven't identified them yet
+
+      const { data: existing } = await sb.from('users')
+        .select('gen_z_number')
+        .eq('device_key', deviceKey)
+        .maybeSingle();
+
+      if (existing) { 
+        userId = 'GEN Z ' + existing.gen_z_number;
+        localStorage.setItem('twc_uid', userId);
+        console.log("Welcome back:", userId);
+      }
+      return userId;
+    } catch(e) { 
+      console.error("Identity Error:", e);
+      return null;
+    }
+  }
+
+  // This is the NEW function to only be called when "Drop" is clicked
+  async function createIdentityOnDrop() {
+    try {
+      let deviceKey = localStorage.getItem('twc_device_key');
       if (!deviceKey) {
         deviceKey = 'dk_' + Math.random().toString(36).substr(2,9) + Date.now().toString(36);
         localStorage.setItem('twc_device_key', deviceKey);
       }
 
-      // 1. Check for existing
-      const { data: existing, error: fetchError } = await sb.from('users')
+      const { data: newUser, error: insertError } = await sb.from('users')
+        .insert([{ device_key: deviceKey }])
         .select('gen_z_number')
-        .eq('device_key', deviceKey)
-        .maybeSingle();
-
-      if (existing && existing.gen_z_number) { 
-        userId = 'GEN Z ' + existing.gen_z_number; 
-      } else {
-        // 2. Insert and get data back
-        const { data: newUser, error: insertError } = await sb.from('users')
-          .insert([{ device_key: deviceKey }])
-          .select(); // Grab the whole row to be safe
+        .single();
         
-        if (insertError) {
-          console.error("Insert Error:", insertError.message);
-          throw insertError;
-        }
-
-        if (newUser && newUser.length > 0) {
-          userId = 'GEN Z ' + newUser[0].gen_z_number;
-        }
-      }
-      
-      if (userId) {
+      if (insertError) throw insertError;
+      if (newUser) {
+        userId = 'GEN Z ' + newUser.gen_z_number;
         localStorage.setItem('twc_uid', userId);
-        console.log("Identity established:", userId);
         return userId;
       }
-      
-      throw new Error("No ID returned from Supabase");
-
-    } catch(e) { 
-      console.error("Sync Failure Details:", e);
-      // Fallback: If DB fails, give them a temporary session ID 
-      // so they can at least see the cards
-      userId = "GEN Z ..."; 
+    } catch(e) {
+      console.error("Failed to create identity:", e);
       return null;
     }
   }
   // SUBMIT: Now waits for the identity before allowing the drop
-  async function submitCard() {
+async function submitCard() {
     const textInput = document.getElementById('cardText');
     const text = textInput.value.trim();
     
@@ -419,12 +418,12 @@ async function initUser() {
       return; 
     }
 
-    // Force identity check if missing
-    if (!userId || userId.includes('...')) {
-        showToast('syncing identity...');
-        userId = await initUser();
-        if (!userId) {
-          showToast('Identity sync failed. Refreshing might help.');
+    // IF NO USER ID, CREATE IT NOW (Only when they actually drop a card)
+    if (!userId) {
+        showToast('assigning your gen z number...');
+        const newId = await createIdentityOnDrop();
+        if (!newId) {
+          showToast('Sync error. Try again.');
           return;
         }
     }
@@ -538,11 +537,10 @@ async function initUser() {
     setTimeout(() => t.classList.remove('show'), 3000);
   }
 
-  async function startApp() {
-    await initUser(); 
+async function startApp() {
+    await initUser(); // Silent check for old users
     renderCards('all');
   }
-
   startApp();
 </script>
 </body>
