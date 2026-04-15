@@ -1,0 +1,15 @@
+{
+  "name": "The Wild Cards",
+  "short_name": "WildCards",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#c4a882",
+  "theme_color": "#c4a882",
+  "icons": [
+    {
+      "src": "images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
