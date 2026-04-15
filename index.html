@@ -552,11 +552,16 @@ async function renderCards(filter) {
             const viewMoreContainer = document.createElement('div');
             viewMoreContainer.style.gridColumn = "1 / -1"; // Span full width
             viewMoreContainer.style.padding = "2rem 0";
-            viewMoreContainer.innerHTML = `
+             viewMoreContainer.innerHTML = `
                 <a href="javascript:void(0)" onclick="loadMore()" 
-                   style="color:var(--text-mid); font-family:'Lora',serif; text-decoration:underline; font-size:1rem; cursor:pointer;">
-                   view more
-                </a>`;
+                style="color: #f5f1e8; /* Light Beige */
+              font-family: 'Lora', serif; 
+              text-decoration: underline; 
+              font-size: 1rem; 
+              cursor: pointer; 
+              font-weight: 500; 
+              text-shadow: 0 1px 3px rgba(0,0,0,0.2);"> view more
+    </a>`;
             grid.appendChild(viewMoreContainer);
         }
         
