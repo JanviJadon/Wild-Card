@@ -385,6 +385,10 @@
 <div class="toast" id="toast"></div>
 
 <script>
+let cardsToShow = 0; 
+const MOBILE_LIMIT = 7;
+const DESKTOP_LIMIT = 12;
+  
   const SUPABASE_URL = 'https://ketbeakwvwnkezkmelff.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtldGJlYWt3dndua2V6a21lbGZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNTMxODcsImV4cCI6MjA5MDYyOTE4N30.5fxnIWomxQiEVj4attkcxPLceGiOsVrcyfxOhRH-Bbk';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -413,6 +417,7 @@
 
   document.querySelectorAll('.filter-chip').forEach(f => {
     f.addEventListener('click', () => {
+      cardsToShow = 0;
       document.querySelectorAll('.filter-chip').forEach(x => x.classList.remove('active'));
       f.classList.add('active');
       renderCards(f.dataset.filter);
@@ -499,45 +504,70 @@
     if (btn) { btn.classList.add('voted'); btn.textContent = 'related ✔'; }
   }
 
-  async function renderCards(filter) {
+async function renderCards(filter) {
     currentFilter = filter;
     const grid = document.getElementById('cardsGrid');
-    grid.innerHTML = '<div class="loading">loading cards...</div>';
+    
+    // Only show loading if we aren't "appending" cards
+    if (cardsToShow === 0) grid.innerHTML = '<div class="loading">loading cards...</div>';
+    
     try {
-      let query = sb.from('cards').select('*');
-      if (filter !== 'all') query = query.eq('type', filter);
-      const { data: all } = await query;
-      
-      all.sort((a, b) => {
-        if (a.is_pinned && !b.is_pinned) return -1;
-        if (!a.is_pinned && b.is_pinned) return 1;
-        if (currentSort === 'votes') return b.votes - a.votes;
-        return new Date(b.created_at) - new Date(a.created_at);
-      });
+        let query = sb.from('cards').select('*');
+        if (filter !== 'all') query = query.eq('type', filter);
+        const { data: all } = await query;
 
-      grid.innerHTML = all.length ? all.map((c, i) => {
-        const pct = Math.min((c.votes/1500)*100, 100);
-        const isV = voted.includes(c.id);
-        return `<div class="wc-card card-entry" style="animation-delay:${i*0.08}s">
-          <div class="wc-card-top"><span class="wc-user-id">${c.user_id || 'GEN Z ???'}</span>${badges[c.type] || badges.freeform}</div>
-          <div class="wc-route">${esc(c.origin)} ➔ ${esc(c.about)}</div>
-          <div class="wc-text">${esc(c.text)}</div>
-          <div class="wc-poll">
-            <div class="poll-bar-bg"><div class="poll-bar-fill" id="bar_${c.id}" style="width:${pct}%"></div></div>
-            <div class="poll-bottom">
-              <div class="poll-count" id="cnt_${c.id}"><b>${c.votes}</b> people related</div>
-              <button class="relate-btn ${isV?'voted':''}" id="rel_${c.id}" onclick="vote('${c.id}')">${isV?'related ✔':'i relate'}</button>
-            </div>
-          </div>
-        </div>`;
-      }).join('') : '<div class="empty">no cards here yet.</div>';
+        // Determine screen limit
+        const isMobile = window.innerWidth <= 768;
+        if (cardsToShow === 0) cardsToShow = isMobile ? MOBILE_LIMIT : DESKTOP_LIMIT;
+
+        // Sort logic
+        all.sort((a, b) => {
+            if (a.is_pinned && !b.is_pinned) return -1;
+            if (currentSort === 'votes') return b.votes - a.votes;
+            return new Date(b.created_at) - new Date(a.created_at);
+        });
+
+        // Only take the number of cards we are allowed to show
+        const visibleCards = all.slice(0, cardsToShow);
+
+        grid.innerHTML = visibleCards.map((c, i) => {
+            const pct = Math.min((c.votes/1500)*100, 100);
+            const isV = voted.includes(c.id);
+            return `<div class="wc-card card-entry" style="animation-delay:${i*0.08}s">
+              <div class="wc-card-top"><span class="wc-user-id">${c.user_id || 'GEN Z ???'}</span>${badges[c.type] || badges.freeform}</div>
+              <div class="wc-route">${esc(c.origin)} ➔ ${esc(c.about)}</div>
+              <div class="wc-text">${esc(c.text)}</div>
+              <div class="wc-poll">
+                <div class="poll-bar-bg"><div class="poll-bar-fill" id="bar_${c.id}" style="width:${pct}%"></div></div>
+                <div class="poll-bottom">
+                  <div class="poll-count" id="cnt_${c.id}"><b>${c.votes}</b> people related</div>
+                  <button class="relate-btn ${isV?'voted':''}" id="rel_${c.id}" onclick="vote('${c.id}')">${isV?'related ✔':'i relate'}</button>
+                </div>
+              </div>
+            </div>`;
+        }).join('');
+
+        // If there are more cards left in the database, add the "view more" link
+        if (all.length > cardsToShow) {
+            const viewMoreContainer = document.createElement('div');
+            viewMoreContainer.style.gridColumn = "1 / -1"; // Span full width
+            viewMoreContainer.style.padding = "2rem 0";
+            viewMoreContainer.innerHTML = `
+                <a href="javascript:void(0)" onclick="loadMore()" 
+                   style="color:var(--text-mid); font-family:'Lora',serif; text-decoration:underline; font-size:1rem; cursor:pointer;">
+                   view more
+                </a>`;
+            grid.appendChild(viewMoreContainer);
+        }
+        
+        if (!all.length) grid.innerHTML = '<div class="empty">no cards here yet.</div>';
     } catch(e) { grid.innerHTML = '<div class="empty">error loading cards.</div>'; }
-  }
-
+}
   function esc(t){ return t ? t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''; }
 
   function setSort(sort, el) {
     currentSort = sort;
+    cardsToShow = 0;
     document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
     el.classList.add('active');
     renderCards(currentFilter);
@@ -557,6 +587,12 @@
     if(t) { t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
   }
 
+function loadMore() {
+    const isMobile = window.innerWidth <= 768;
+    cardsToShow += isMobile ? MOBILE_LIMIT : DESKTOP_LIMIT;
+    renderCards(currentFilter);
+}
+  
   async function startApp() {
     await initUser();
     renderCards('all');
