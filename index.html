@@ -165,11 +165,11 @@
 animation: globeRotateHorizontal 8s ease-in-out infinite;
     }
 
-    @keyframes globeRotateHorizontal {
-      0% { transform: rotateY(0deg); }
-      25% { transform: rotateY(360deg); } /* Completes spin in 2 seconds */
-      100% { transform: rotateY(360deg); } /* Stays still for the remaining 6 seconds */
-    }
+@keyframes globeRotateHorizontal {
+  0%   { transform: rotateY(0deg); }   /* Start */
+  35%  { transform: rotateY(360deg); } /* Finish spin quickly */
+  100% { transform: rotateY(360deg); } /* HOLD this position until the end */
+}
     
     .spinning-fast { animation: globeRotateHorizontal 0.8s ease-in-out !important; }
 
