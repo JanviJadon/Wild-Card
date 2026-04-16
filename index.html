@@ -162,14 +162,14 @@
     .globe-submit svg{
       width:56px;height:56px;
       filter:drop-shadow(0 3px 8px rgba(80,50,10,0.2));
-animation: globeRotateHorizontal 8s ease-in-out infinite;
+animation: globeRotateHorizontal 7s ease-in-out infinite;
     }
 
-@keyframes globeRotateHorizontal {
-  0%   { transform: rotateY(0deg); }   /* Start */
-  35%  { transform: rotateY(360deg); } /* Finish spin quickly */
-  100% { transform: rotateY(360deg); } /* HOLD this position until the end */
-}
+    @keyframes globeRotateHorizontal {
+      0%   { transform: rotateY(0deg); }
+      43%  { transform: rotateY(360deg); } /* Spin finishes at 3s */
+      100% { transform: rotateY(360deg); } /* Pause lasts for the remaining 4s */
+    }
     
     .spinning-fast { animation: globeRotateHorizontal 0.8s ease-in-out !important; }
 
